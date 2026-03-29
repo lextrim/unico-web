@@ -40,7 +40,6 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
   const navigate = useNavigate();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const listHeaderRef = useRef<HTMLDivElement>(null);
-
   const [records, setRecords] = useState<any[]>([]);
   const [search, setSearch] = useState("");
 
@@ -60,7 +59,6 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
   const [tiradores, setTiradores] = useState(draftLoaded.tiradores || false);
   const [notes, setNotes] = useState(draftLoaded.notes || "");
   const [editingId, setEditingId] = useState<string | null>(draftLoaded.editingId || null);
-
   const [isUploading, setIsUploading] = useState(false);
   const [fullscreenImg, setFullscreenImg] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -90,12 +88,11 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
   const onSave = async () => {
     if (!client.trim()) return alert("CLIENTE OBLIGATORIO");
     setIsUploading(true);
-    let finalImageUrl = editingId ? records.find(r => r.id === editingId)?.image_url : null;
-
     try {
+      let finalImageUrl = editingId ? records.find(r => r.id === editingId)?.image_url : null;
       if (imageFile) {
         const compressed = await compressImage(imageFile);
-        const fileName = `${Date.now()}.jpg`;
+        const fileName = `${Date.now()}_${Math.random()}.jpg`;
         await supabase.storage.from('unico_images').upload(fileName, compressed);
         const { data: pub } = supabase.storage.from('unico_images').getPublicUrl(fileName);
         finalImageUrl = pub.publicUrl;
@@ -112,11 +109,12 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
       if (estado !== "") {
         await supabase.from('unico_orders').insert({ id: crypto.randomUUID(), payload: { ...payload, status: estado, category: estado }, created_at: nowIso, category: estado });
         if (editingId) await supabase.from('unico_materials').delete().eq('id', editingId);
-        resetForm();
-        navigate(`/list/${estado}`); // ⚡ Volvemos a navegación segura
+        localStorage.removeItem(DRAFT_KEY);
+        navigate(`/list/${estado}`);
       } else {
         const ex = editingId ? records.find(r => r.id === editingId) : null;
         await supabase.from('unico_materials').upsert({ id: editingId || crypto.randomUUID(), payload, created_at: ex ? ex.server_created_at : nowIso });
+        localStorage.removeItem(DRAFT_KEY);
         resetForm(); fetchMaterials();
       }
     } catch (err) { alert("Error al guardar"); }
@@ -144,9 +142,9 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
         <div className="fixed inset-0 z-[110] bg-black flex items-center justify-center p-6">
           <button onClick={() => setFullscreenImg(null)} className="absolute top-6 right-6 z-[120] p-3 bg-white/10 rounded-full text-white backdrop-blur-md border border-white/20 active:scale-90 transition-all"><X size={28} /></button>
           <div className="w-full h-full flex items-center justify-center max-w-7xl mx-auto shadow-2xl">
-            <TransformWrapper initialScale={1} minScale={1} maxScale={5} centerOnInit={true}>
+            <TransformWrapper initialScale={1} centerOnInit={true}>
               <TransformComponent wrapperStyle={{ width: "100vw", height: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <img src={fullscreenImg} className="max-w-full max-h-screen object-contain rounded-xl shadow-2xl" />
+                <img src={fullscreenImg} className="max-w-full max-h-screen object-contain rounded-xl" />
               </TransformComponent>
             </TransformWrapper>
           </div>
@@ -155,7 +153,7 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
 
       <div className="sticky top-0 z-30 bg-blue-600 shadow-xl">
         <div className="max-w-xl mx-auto px-5 py-4 flex items-center gap-2">
-          <button onClick={() => navigate("/menu")} className="active:scale-90 transition-transform"><ChevronLeft size={28} /></button>
+          <button onClick={() => navigate("/menu")} className="active:scale-90 transition-transform text-white"><ChevronLeft size={28} /></button>
           <h1 className="text-lg font-black uppercase tracking-widest leading-none text-white">Material</h1>
         </div>
       </div>
@@ -210,29 +208,25 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
                <input value={nivel} onChange={e => { setNivel(e.target.value); saveDraft({ nivel: e.target.value }); }} className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-white font-black uppercase outline-none transition-all" placeholder="NIVEL" />
              </div>
 
-             <textarea value={notes} onChange={e => { setNotes(e.target.value); saveDraft({ notes: e.target.value }); }} placeholder="NOTAS..." className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-white font-black uppercase outline-none min-h-[80px]" />
-
              <button onClick={onSave} disabled={isUploading} className="w-full bg-blue-600 py-5 rounded-2xl text-base font-black uppercase text-white shadow-xl active:scale-95 transition-all">
                {isUploading ? <Loader2 className="animate-spin mx-auto text-white" /> : (editingId ? "ACTUALIZAR" : "GUARDAR")}
              </button>
-             {editingId && <button onClick={resetForm} className="w-full bg-slate-800 py-3 rounded-xl font-black uppercase text-[10px] active:scale-95 transition-all text-slate-400">CANCELAR EDICIÓN</button>}
+             {editingId && <button onClick={resetForm} className="w-full bg-slate-800 py-3 rounded-xl font-black uppercase text-[10px] active:scale-95 transition-all">CANCELAR EDICIÓN</button>}
           </div>
         )}
 
         <div ref={listHeaderRef} className="max-w-xl mx-auto px-5 py-6">
           <div className="space-y-3 pb-40">
             {filtered.map(r => (
-              <div key={r.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-3 flex items-center gap-4 min-h-[96px] shadow-sm">
+              <div key={r.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-3 flex items-center gap-4 shadow-sm">
                 <div className="shrink-0" onClick={() => r.image_url && setFullscreenImg(r.image_url)}>
-                  {r.image_url ? <img src={r.image_url} className="h-16 w-16 rounded-xl object-cover border border-slate-800 cursor-pointer active:scale-95 transition-transform" /> : <div className="h-16 w-16 rounded-xl bg-slate-800 flex items-center justify-center text-white border border-slate-800"><ImageIcon size={20}/></div>}
+                  {r.image_url ? <img src={r.image_url} className="h-16 w-16 rounded-xl object-cover border border-slate-800 cursor-pointer" /> : <div className="h-16 w-16 rounded-xl bg-slate-800 flex items-center justify-center border border-slate-800"><ImageIcon size={20}/></div>}
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-sm font-black uppercase truncate text-white">{r.client}</h3>
                   {r.ubicado && <p className="text-[10px] text-slate-500 uppercase mt-1 truncate"><MapPin size={10} className="inline mr-1" />{r.ubicado}</p>}
                   <div className="flex gap-1.5 mt-2">
-                    <span className={getBadgeClass(r.cascos)}>CA</span>
-                    <span className={getBadgeClass(r.puertas)}>PT</span>
-                    <span className={getBadgeClass(r.tiradores)}>TR</span>
+                    <span className={getBadgeClass(r.cascos)}>CA</span><span className={getBadgeClass(r.puertas)}>PT</span><span className={getBadgeClass(r.tiradores)}>TR</span>
                   </div>
                 </div>
                 {isAdmin && (
@@ -240,8 +234,8 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
                     <button onClick={() => {
                       const parts = r.ubicado?.split(' - ') || ["",""];
                       setEditingId(r.id); setClient(r.client); setRack(parts[0]); setNivel(parts[1]);
-                      setCascos(r.cascos); setPuertas(r.puertas); setTiradores(r.tiradores); setNotes(r.notes || "");
-                      saveDraft({ editingId: r.id, client: r.client, rack: parts[0], nivel: parts[1], cascos: r.cascos, puertas: r.puertas, tiradores: r.tiradores, notes: r.notes || "" });
+                      setCascos(r.cascos); setPuertas(r.puertas); setTiradores(r.tiradores);
+                      saveDraft({ editingId: r.id, client: r.client, rack: parts[0], nivel: parts[1], cascos: r.cascos, puertas: r.puertas, tiradores: r.tiradores });
                       if(scrollContainerRef.current) scrollContainerRef.current.scrollTo({top: 0, behavior: 'smooth'});
                     }} className="p-2 bg-blue-500/10 rounded-lg text-white border border-blue-500/20 active:scale-90 transition-all"><Edit3 size={16}/></button>
                     <button onClick={async () => { if(window.confirm("¿BORRAR?")) { await supabase.from('unico_materials').delete().eq('id', r.id); fetchMaterials(); } }} className="p-2 bg-red-500/10 rounded-lg text-red-500 border border-red-500/20 active:scale-90 transition-all"><Trash2 size={16}/></button>

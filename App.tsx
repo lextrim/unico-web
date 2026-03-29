@@ -3,7 +3,6 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { supabase } from './supabase';
 import { Session } from '@supabase/supabase-js';
 
-// Componentes
 import MenuScreen from './components/MenuScreen';
 import MaterialScreen from './components/MaterialScreen';
 import ListScreen from './components/ListScreen';
@@ -17,7 +16,7 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isAdminFromDB, setIsAdminFromDB] = useState(false);
   const [orders, setOrders] = useState<any[]>([]);
-  const location = useLocation();
+  const location = useLocation(); // ⚡ Escucha cambios de pantalla
 
   const isAPK = /wv|android|iphone/i.test(navigator.userAgent) && !/chrome|safari/i.test(navigator.userAgent) || /wv/i.test(navigator.userAgent);
   const isAdmin = isAPK || isAdminFromDB;
@@ -45,13 +44,13 @@ const App: React.FC = () => {
         setOrders([...formattedM, ...formattedO]);
       }
     } catch (e) {
-      console.error("Error cargando datos:", e);
+      console.error(e);
     } finally {
       setLoading(false);
     }
   };
 
-  // ⚡ RECARGA AUTOMÁTICA AL NAVEGAR (Soluciona el fallo de actualización)
+  // ⚡ CADA VEZ QUE CAMBIAS DE PANTALLA, CARGAMOS DATOS FRESCOS
   useEffect(() => {
     loadData();
   }, [location.pathname, isAPK]);
@@ -68,9 +67,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-950">
-      {!session && !isAPK ? (
-        <LoginScreen />
-      ) : (
+      {!session && !isAPK ? <LoginScreen /> : (
         <Routes>
           <Route path="/" element={<Navigate to="/menu" replace />} />
           <Route path="/menu" element={<MenuScreen isAdmin={isAdmin} isAPK={isAPK} />} />

@@ -72,8 +72,8 @@ const FormScreen: React.FC = () => {
     <div className="flex flex-col min-h-screen bg-slate-950 text-white w-full">
       <div className="bg-slate-900 border-b border-slate-800 sticky top-0 z-30">
         <div className="max-w-xl mx-auto px-4 py-4 flex items-center justify-between">
-          <button onClick={() => navigate(-1)}><ChevronLeft size={28} /></button>
-          <h1 className="text-lg font-black uppercase tracking-widest truncate flex-1 text-center">Ficha de Pedido</h1>
+          <button onClick={() => navigate(-1)} className="p-2 text-white"><ChevronLeft size={28} /></button>
+          <h1 className="text-lg font-black uppercase tracking-widest truncate text-center">Editar Pedido</h1>
           <div className="w-10"></div>
         </div>
       </div>
@@ -81,14 +81,14 @@ const FormScreen: React.FC = () => {
       <div className="flex-1 w-full max-w-xl mx-auto p-4 space-y-6 mb-20">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="bg-slate-900 p-4 rounded-[2rem] border border-slate-800 flex flex-col items-center justify-center relative min-h-[160px]">
-            {imagePreview ? <img src={imagePreview} className="w-full h-48 object-cover rounded-2xl" /> : <ImageIcon size={32} className="text-slate-700" />}
-            <input type="file" accept="image/*" onChange={(e) => { if (e.target.files?.[0]) { setImageFile(e.target.files[0]); setImagePreview(URL.createObjectURL(e.target.files[0])); } }} className="absolute inset-0 opacity-0 cursor-pointer" />
+            {imagePreview ? <img src={imagePreview} className="w-full h-48 object-cover rounded-2xl" /> : <ImageIcon size={32} className="text-slate-500" />}
+            <input type="file" accept="image/*" onChange={(e) => { if(e.target.files?.[0]) { setImageFile(e.target.files[0]); setImagePreview(URL.createObjectURL(e.target.files[0])); } }} className="absolute inset-0 opacity-0 cursor-pointer" />
           </div>
 
           <div className="bg-slate-900 p-6 rounded-[2rem] border border-slate-800 space-y-5 shadow-xl">
             <div>
-              <label className="block text-[10px] font-black uppercase text-slate-500 mb-2 ml-2">Mover a Estado:</label>
-              <select name="category" value={formData.category} onChange={handleInputChange} className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-white font-bold text-sm outline-none focus:border-blue-500 appearance-none">
+              <label className="block text-[10px] font-black uppercase text-slate-500 mb-2 ml-2">Estado del Pedido</label>
+              <select name="category" value={formData.category} onChange={handleInputChange} className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-white font-bold text-sm outline-none appearance-none">
                 <option value="ARMANDOSE">ARMÁNDOSE</option>
                 <option value="TERMINADA">TERMINADA</option>
                 <option value="PROGRAMADA">ENTREGAS</option>
@@ -96,10 +96,7 @@ const FormScreen: React.FC = () => {
               </select>
             </div>
 
-            <div>
-              <label className="block text-[10px] font-black uppercase text-slate-500 mb-2 ml-2">Cliente</label>
-              <input type="text" name="client" value={formData.client || ''} onChange={handleInputChange} className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-white font-bold text-sm outline-none" />
-            </div>
+            <input type="text" name="client" value={formData.client || ''} onChange={handleInputChange} className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-white font-bold text-sm outline-none" placeholder="CLIENTE" />
 
             <div className="flex gap-4">
               {['cascos', 'puertas'].map(f => (
@@ -109,11 +106,10 @@ const FormScreen: React.FC = () => {
                 </label>
               ))}
             </div>
-
             <textarea name="notes" value={formData.notes || ''} onChange={handleInputChange} placeholder="NOTAS..." rows={3} className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-white font-bold text-sm resize-none outline-none" />
           </div>
 
-          <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white font-black uppercase py-5 rounded-2xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-3">
+          <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white font-black uppercase py-5 rounded-2xl flex items-center justify-center gap-3 active:scale-95 transition-all shadow-xl">
             {loading ? <Loader2 className="animate-spin" /> : <Save size={20} />} GUARDAR CAMBIOS
           </button>
         </form>

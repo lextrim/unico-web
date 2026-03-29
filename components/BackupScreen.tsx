@@ -44,7 +44,7 @@ const BackupScreen = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-950 text-white">
+    <div className="flex flex-col min-h-screen bg-slate-950 text-white no-scrollbar">
       <div className="bg-slate-900 shadow-lg z-30 border-b border-slate-800">
         <div className="max-w-xl mx-auto px-5 py-3 flex items-center gap-2">
           <button onClick={() => navigate('/menu')}><ChevronLeft size={28} /></button>
@@ -58,10 +58,10 @@ const BackupScreen = () => {
         </div>
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 text-center relative shadow-xl">
             <Upload className="mx-auto text-orange-500 mb-4" size={40} />
-            <button className="w-full bg-slate-800 py-4 rounded-2xl font-black uppercase tracking-widest text-slate-300">Seleccionar Archivo</button>
+            <button className="w-full bg-slate-800 py-4 rounded-2xl font-black uppercase tracking-widest">Importar JSON</button>
             <input type="file" accept=".json" onChange={(e) => { if(e.target.files?.[0]) { setPendingFile(e.target.files[0]); setShowConfirm(true); } }} className="absolute inset-0 opacity-0 cursor-pointer" />
         </div>
-        {status && <div className="p-4 rounded-2xl text-center font-black uppercase text-[10px] bg-slate-900 text-emerald-400 border border-emerald-500/20">{status.msg}</div>}
+        {status && <div className="p-4 rounded-2xl text-center font-black uppercase text-[10px] bg-slate-900 text-emerald-400 border border-emerald-500/20 tracking-widest">{status.msg}</div>}
       </div>
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-sm">
@@ -70,7 +70,7 @@ const BackupScreen = () => {
             <h3 className="text-white text-xl font-black text-center uppercase mb-4">¿Importar Datos?</h3>
             <div className="space-y-3">
                 <button onClick={confirmImport} className="w-full bg-emerald-600 py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all">Sí, Restaurar</button>
-                <button onClick={() => setShowConfirm(false)} className="w-full bg-slate-800 py-4 rounded-2xl font-black uppercase tracking-widest">Cancelar</button>
+                <button onClick={() => setShowConfirm(false)} className="w-full bg-slate-800 py-4 rounded-2xl font-black uppercase tracking-widest active:scale-95 transition-all">Cancelar</button>
             </div>
           </div>
         </div>
