@@ -1,0 +1,6 @@
+# Carpetas temporales de Android y Gradle
+caches/
+.gradle/
+app/build/
+build/
+local.properties

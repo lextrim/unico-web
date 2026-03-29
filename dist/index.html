@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, interactive-widget=resizes-content">
+    <title>ÚNICO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="./vendor/supabase.js" ></script>
+    <script defer src="./unico-realtime-bridge.js" ></script>
+    <style>
+        /* 👇 EVITA REBOTES Y SCROLLS RAROS AL ARRASTRAR EL DEDO 👇 */
+        html, body {
+          touch-action: pan-x pan-y;
+          overscroll-behavior-y: none;
+        }
+
+        body { text-transform: uppercase; margin: 0; background-color: #020617; }
+
+        /* 👇 EL TRUCO DE LOS 16px PARA BLOQUEAR EL ZOOM DEL TECLADO 👇 */
+        input, textarea, select {
+          text-transform: uppercase;
+          font-size: 16px !important;
+          touch-action: manipulation;
+        }
+
+        input::placeholder, textarea::placeholder { text-transform: none; }
+        .no-scrollbar::-webkit-scrollbar { display: none !important; }
+        .no-scrollbar { -ms-overflow-style: none !important; scrollbar-width: none !important; }
+
+        /* Animación suave para el modal */
+        .modal-fade-in { animation: fadeIn 0.2s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    </style>
+  <script type="module" crossorigin src="./assets/index-D-jx8FF2.js"></script>
+</head>
+<body class="bg-slate-950 text-slate-50 min-h-screen no-scrollbar">
+<div id="root"></div>
+</body>
+</html>

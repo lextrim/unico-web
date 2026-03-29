@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  /* Oculta la barra pero permite el movimiento */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE y Edge */
+    scrollbar-width: none;    /* Firefox */
+  }
+}
+
+body {
+  margin: 0;
+  background-color: #020617; /* slate-950 */
+  color: white;
+}

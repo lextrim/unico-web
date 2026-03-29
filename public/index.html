@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UNICO</title>
+
+    <!-- Tu CSS lo gestiona Vite (index.css / tailwind si procede) -->
+
+    <!-- Polyfills Android WebView (OK) -->
+    <script>
+        (function () {
+          try {
+            if (!("Notification" in window)) {
+              window.Notification = function () {};
+              window.Notification.permission = "denied";
+              window.Notification.requestPermission = function (cb) {
+                var p = Promise.resolve("denied");
+                if (typeof cb === "function") p.then(cb);
+                return p;
+              };
+            } else if (typeof window.Notification.permission === "undefined") {
+              window.Notification.permission = "default";
+            }
+
+            if (!window.crypto) window.crypto = {};
+            if (!window.crypto.randomUUID) {
+              window.crypto.randomUUID = function () {
+                var bytes;
+                if (window.crypto.getRandomValues) {
+                  bytes = new Uint8Array(16);
+                  window.crypto.getRandomValues(bytes);
+                } else {
+                  bytes = Array.from({ length: 16 }, function () {
+                    return Math.floor(Math.random() * 256);
+                  });
+                }
+                bytes[6] = (bytes[6] & 0x0f) | 0x40;
+                bytes[8] = (bytes[8] & 0x3f) | 0x80;
+                var hex = Array.from(bytes, function (b) {
+                  return b.toString(16).padStart(2, "0");
+                });
+                return (
+                  hex.slice(0, 4).join("") +
+                  "-" +
+                  hex.slice(4, 6).join("") +
+                  "-" +
+                  hex.slice(6, 8).join("") +
+                  "-" +
+                  hex.slice(8, 10).join("") +
+                  "-" +
+                  hex.slice(10, 16).join("")
+                );
+              };
+            }
+          } catch (e) {
+            console.log("polyfill error", e);
+          }
+        })();
+    </script>
+
+    <!-- Backup hooks (IMPORTANTE: script BIEN cerrado) -->
+    <script>
+        (function () {
+          try {
+            var ORDERS_KEY = "cocina_orders";
+            var MATERIAL_KEY = "unico_material_records";
+
+            function safeJsonParse(str, fallback) {
+              try {
+                return JSON.parse(str);
+              } catch (_) {
+                return fallback;
+              }
+            }
+
+            function asArray(v) {
+              return Array.isArray(v) ? v : [];
+            }
+
+            function buildBackupJson() {
+              try {
+                var orders = safeJsonParse(localStorage.getItem(ORDERS_KEY) || "[]", []);
+                var materials = safeJsonParse(localStorage.getItem(MATERIAL_KEY) || "[]", []);
+
+                var payload = { app: "UNICO", schema: 2, exportedAt: Date.now(), data: {} };
+                payload.data[ORDERS_KEY] = orders;
+                payload.data[MATERIAL_KEY] = materials;
+                return JSON.stringify(payload);
+              } catch (_) {
+                return null;
+              }
+            }
+
+            function restoreBackupJson(jsonStr) {
+              try {
+                if (typeof jsonStr !== "string" || !jsonStr.trim()) return false;
+                var parsed = safeJsonParse(jsonStr, null);
+                if (parsed == null) return false;
+
+                // Si tu restore completo ya lo tienes, aquí puedes dejar el tuyo.
+                // Esto lo dejo simple para no romper nada:
+                var data = parsed && parsed.data ? parsed.data : parsed;
+                var orders = asArray(data[ORDERS_KEY] || data.orders || data.pedidos || []);
+                var materials = asArray(data[MATERIAL_KEY] || data.materials || data.materialRecords || []);
+
+                localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+                localStorage.setItem(MATERIAL_KEY, JSON.stringify(materials));
+
+                try {
+                  window.dispatchEvent(new Event("unico-orders-sync"));
+                } catch (_) {}
+                return true;
+              } catch (e) {
+                try {
+                  console.log("UNICO_restoreBackupJson error", e);
+                } catch (_) {}
+                return false;
+              }
+            }
+
+            window.UNICO_buildBackupJson = buildBackupJson;
+            window.UNICO_restoreBackupJson = restoreBackupJson;
+          } catch (e) {
+            try {
+              console.log("UNICO backup hook error", e);
+            } catch (_) {}
+          }
+        })();
+    </script>
+  <script type="module" crossorigin src="./assets/index-D0XV_yUn.js"></script>
+</head>
+
+<body class="bg-slate-900 text-slate-50 min-h-screen">
+<div id="root"></div>
+
+<!-- ✅ Estos ficheros deben existir en /public para que Vite los copie a dist -->
+<script src="./vendor/supabase.js?v=1"></script>
+<script src="./unico-realtime-bridge.js?v=1"></script>
+
+<!-- ✅ Entry real de tu app -->
+</body>
+</html>
