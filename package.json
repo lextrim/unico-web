@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "homepage": "https://github.com/lextrim/unico-web/tree/main",
+  "homepage": "https://lextrim.github.io/unico-web",
   "scripts": {
     "dev": "vite",
     "build": "vite build && pnpm copy-dist",
