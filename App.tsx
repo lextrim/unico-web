@@ -25,13 +25,16 @@ const App: React.FC = () => {
     try {
       const { data: { session: cur } } = await supabase.auth.getSession();
       setSession(cur);
+
       if (cur || isAPK) {
         if (cur) {
           const { data: role } = await supabase.from('unico_roles').select('*').eq('email', cur.user.email);
           if (role && role.length > 0) setIsAdminFromDB(role[0].role === 'admin');
         }
+
         const { data: m } = await supabase.from('unico_materials').select('*');
         const { data: o } = await supabase.from('unico_orders').select('*');
+
         const formattedM = (m || []).map(x => ({ id: x.id, ...x.payload, category: 'MATERIALES', created_at: x.created_at }));
         const formattedO = (o || []).map(x => {
           const p = x.payload || {};
@@ -44,7 +47,10 @@ const App: React.FC = () => {
     finally { setLoading(false); }
   };
 
-  useEffect(() => { loadData(); }, [location.pathname, isAPK]);
+  // ⚡ RECARGA AUTOMÁTICA: Detecta cuando navegas y trae los datos frescos de Supabase
+  useEffect(() => {
+    loadData();
+  }, [location.pathname, isAPK]);
 
   const handleDelete = async (id: string) => {
     if(window.confirm("¿BORRAR REGISTRO?")) {
@@ -54,7 +60,7 @@ const App: React.FC = () => {
     }
   };
 
-  if (loading) return <div className="h-screen bg-slate-950 flex items-center justify-center text-white font-black uppercase">Cargando...</div>;
+  if (loading) return <div className="h-screen bg-slate-950 flex items-center justify-center text-white font-black uppercase tracking-widest">Cargando...</div>;
 
   return (
     <div className="min-h-screen bg-slate-950">
@@ -73,4 +79,5 @@ const App: React.FC = () => {
     </div>
   );
 };
+
 export default App;
