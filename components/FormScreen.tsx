@@ -49,6 +49,13 @@ const DeliveryModal: React.FC<{
   );
 };
 
+const NEXT_OPTIONS: Record<string, { value: string; label: string }[]> = {
+  ARMANDOSE:    [{ value: 'ARMANDOSE', label: 'ARMÁNDOSE' }, { value: 'TERMINADA', label: 'TERMINADA' }, { value: 'PROGRAMADA', label: 'ENTREGAS' }, { value: 'TERMINACIONES', label: 'TERMINACIONES' }],
+  TERMINADA:    [{ value: 'TERMINADA', label: 'TERMINADA' }, { value: 'PROGRAMADA', label: 'ENTREGAS' }, { value: 'TERMINACIONES', label: 'TERMINACIONES' }],
+  PROGRAMADA:   [{ value: 'PROGRAMADA', label: 'ENTREGAS' }, { value: 'TERMINACIONES', label: 'TERMINACIONES' }],
+  TERMINACIONES:[{ value: 'TERMINACIONES', label: 'TERMINACIONES' }],
+};
+
 // ─── FormScreen ────────────────────────────────────────────────────────────────
 const FormScreen: React.FC = () => {
   const { category, id } = useParams<{ category: string; id?: string }>();
@@ -249,10 +256,9 @@ const FormScreen: React.FC = () => {
                 onChange={handleInputChange}
                 className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-white font-bold text-sm outline-none appearance-none"
               >
-                <option value="ARMANDOSE">ARMÁNDOSE</option>
-                <option value="TERMINADA">TERMINADA</option>
-                <option value="PROGRAMADA">ENTREGAS</option>
-                <option value="TERMINACIONES">TERMINACIONES</option>
+                {(NEXT_OPTIONS[category?.toUpperCase() || ''] || []).map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
               </select>
             </div>
 

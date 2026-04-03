@@ -245,10 +245,10 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
               className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-white font-black uppercase outline-none transition-all"
             >
               <option value="">QUEDARSE EN MATERIAL</option>
-              <option value="ARMANDOSE">A ARMÁNDOSE</option>
-              <option value="TERMINADA">A TERMINADA</option>
-              <option value="PROGRAMADA">A ENTREGAS</option>
-              <option value="TERMINACIONES">A TERMINACIONES</option>
+              <option value="ARMANDOSE">ARMÁNDOSE</option>
+              <option value="TERMINADA">TERMINADA</option>
+              <option value="PROGRAMADA">ENTREGAS</option>
+              <option value="TERMINACIONES">TERMINACIONES</option>
             </select>
 
             {/* Checkboxes */}
