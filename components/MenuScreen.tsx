@@ -12,7 +12,7 @@ const MenuScreen: React.FC<{ isAdmin: boolean, isAPK: boolean }> = ({ isAdmin, i
     { label: 'Terminada', icon: <CheckCircle />, path: '/list/TERMINADA', color: 'bg-emerald-600' },
     { label: 'Entregas', icon: <Truck />, path: '/list/PROGRAMADA', color: 'bg-indigo-600' },
     { label: 'Terminaciones', icon: <AlertTriangle />, path: '/list/TERMINACIONES', color: 'bg-red-600' },
-    { label: 'Informes', icon: <FileText />, path: '/history', color: 'bg-slate-600' },
+    { label: 'Informes', icon: <FileText />, path: '/informes', color: 'bg-slate-600' },
   ];
 
   return (

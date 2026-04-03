@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Trash2, MapPin, Search, Camera, Loader2, Image as ImageIcon, Edit3, X, FileText } from "lucide-react";
+import { ChevronLeft, Trash2, MapPin, Search, Camera, Loader2, Image as ImageIcon, Edit3, X, FileText, AlertTriangle, AlertCircle } from "lucide-react";
 import { supabase } from "../supabase";
+import AppModal from "./AppModal";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
 const getBadgeClass = (isActive: boolean) =>
@@ -37,6 +38,7 @@ const compressImage = (file: File): Promise<File> => {
 const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders = [], isAdmin }) => {
   const navigate = useNavigate();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const [records, setRecords] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [client, setClient] = useState("");
@@ -52,6 +54,13 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
   const [fullscreenImg, setFullscreenImg] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [modal, setModal] = useState<any>(null);
+
+  const showAlert = (title: string, message?: string, iconBg = 'bg-orange-600', icon = <AlertTriangle size={28} className="text-white" />) =>
+    setModal({ title, message, icon, iconBg, onConfirm: () => setModal(null) });
+
+  const showConfirm = (title: string, message: string, onConfirm: () => void) =>
+    setModal({ title, message, icon: <Trash2 size={28} className="text-white" />, iconBg: 'bg-red-600', confirmText: 'BORRAR', confirmClass: 'bg-red-600', onConfirm: () => { setModal(null); onConfirm(); }, onCancel: () => setModal(null) });
 
   const fetchMaterials = async () => {
     const { data } = await supabase.from('unico_materials').select('*').order('created_at', { ascending: false });
@@ -67,7 +76,12 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
   };
 
   const onSave = async () => {
-    if (!client.trim()) return alert("CLIENTE OBLIGATORIO");
+    if (!client.trim()) { showAlert("Campo obligatorio", "El nombre del cliente es obligatorio"); return; }
+    const clientUpper = client.toUpperCase().trim();
+    if (!editingId) {
+      const dup = records.find(r => r.client?.toUpperCase().trim() === clientUpper);
+      if (dup) { showAlert("Cliente duplicado", `Ya existe un registro con el cliente "${clientUpper}"`); return; }
+    }
     setIsUploading(true);
     try {
       let finalImageUrl = editingId ? records.find(r => r.id === editingId)?.image_url : null;
@@ -107,7 +121,7 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
         });
         resetForm(); fetchMaterials();
       }
-    } catch (err) { alert("Error al guardar"); }
+    } catch (err) { showAlert("Error al guardar", "Ha ocurrido un error. Inténtalo de nuevo.", 'bg-red-600', <AlertCircle size={28} className="text-white" />); }
     finally { setIsUploading(false); }
   };
 
@@ -131,18 +145,39 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
     return records.filter(r => r.client?.toUpperCase().includes(q) || r.ubicado?.toUpperCase().includes(q));
   }, [records, search]);
 
+  useEffect(() => {
+    if (search.trim() === "") {
+      scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    } else if (filtered.length > 0) {
+      itemRefs.current.get(filtered[0].id)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [filtered]);
+
   return (
     <div className="flex flex-col h-screen bg-slate-950 text-white overflow-hidden relative">
+      {modal && <AppModal {...modal} />}
       {fullscreenImg && (
-        <div className="fixed inset-0 z-[110] bg-black flex items-center justify-center p-6">
-          <button onClick={() => setFullscreenImg(null)} className="absolute top-6 right-6 z-[120] p-3 bg-white/10 rounded-full text-white backdrop-blur-md border border-white/20 active:scale-90 transition-all">
-            <X size={28} />
+        <div className="fixed inset-0 z-[110] bg-black/95 backdrop-blur-sm flex items-center justify-center">
+          <button
+            onClick={() => setFullscreenImg(null)}
+            className="absolute top-5 right-5 z-[120] p-2.5 bg-white/10 rounded-full text-white border border-white/15 active:scale-90 transition-all"
+          >
+            <X size={22} />
           </button>
-          <TransformWrapper initialScale={1} centerOnInit={true}>
-            <TransformComponent wrapperStyle={{ width: "100vw", height: "100vh" }}>
-              <img src={fullscreenImg} className="max-w-full max-h-screen object-contain rounded-xl shadow-2xl" />
+          <TransformWrapper initialScale={1} minScale={0.3} maxScale={8} centerOnInit={true}>
+            <TransformComponent
+              wrapperStyle={{ width: "100vw", height: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}
+              contentStyle={{ display: "flex", alignItems: "center", justifyContent: "center" }}
+            >
+              <img
+                src={fullscreenImg}
+                style={{ width: "100vw", height: "100vh", objectFit: "contain" }}
+              />
             </TransformComponent>
           </TransformWrapper>
+          <span className="absolute bottom-5 left-1/2 -translate-x-1/2 text-white/25 text-[9px] font-black uppercase tracking-widest pointer-events-none">
+            Pellizca para zoom
+          </span>
         </div>
       )}
 
@@ -269,7 +304,7 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
         {/* Lista de registros */}
         <div className="max-w-xl mx-auto px-5 py-6 space-y-3 pb-40">
           {filtered.map(r => (
-            <div key={r.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-3 flex items-start gap-4 shadow-sm">
+            <div key={r.id} ref={el => { if (el) itemRefs.current.set(r.id, el); else itemRefs.current.delete(r.id); }} className="bg-slate-900 border border-slate-800 rounded-2xl p-3 flex items-start gap-4 shadow-sm">
               {/* Imagen */}
               <div className="shrink-0 mt-1" onClick={() => r.image_url && setFullscreenImg(r.image_url)}>
                 {r.image_url
@@ -310,12 +345,10 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
                     <Edit3 size={16} />
                   </button>
                   <button
-                    onClick={async () => {
-                      if (window.confirm("¿BORRAR?")) {
-                        await supabase.from('unico_materials').delete().eq('id', r.id);
-                        fetchMaterials();
-                      }
-                    }}
+                    onClick={() => showConfirm("¿Borrar registro?", `Se eliminará "${r.client}" de forma permanente.`, async () => {
+                      await supabase.from('unico_materials').delete().eq('id', r.id);
+                      fetchMaterials();
+                    })}
                     className="p-2 bg-red-500/10 rounded-lg text-red-500 border border-red-500/20 active:scale-90 transition-all"
                   >
                     <Trash2 size={16} />

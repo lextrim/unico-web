@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, Save, Image as ImageIcon, Loader2, Clock } from 'lucide-react';
+import { ChevronLeft, Save, Image as ImageIcon, Loader2, Clock, AlertTriangle, AlertCircle } from 'lucide-react';
 import { supabase } from '../supabase';
+import AppModal from './AppModal';
 
 // ─── Modal de fecha/hora (solo al MOVER a Entregas por primera vez) ────────────
 const DeliveryModal: React.FC<{
@@ -67,6 +68,10 @@ const FormScreen: React.FC = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
+  const [modal, setModal] = useState<any>(null);
+
+  const showAlert = (title: string, message?: string, iconBg = 'bg-orange-600', icon: React.ReactNode = <AlertTriangle size={28} className="text-white" />) =>
+    setModal({ title, message, icon, iconBg, onConfirm: () => setModal(null) });
 
   // Categoría activa (se actualiza al cambiar el select)
   const currentCategory = (formData.category || category || '').toUpperCase();
@@ -116,7 +121,20 @@ const FormScreen: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const targetCategory = (formData.category || category || '').toUpperCase();
-    // ✅ Modal solo si MUEVE a Entregas desde otra categoría (no si ya era Entregas)
+
+    const clientUpper = (formData.client || '').toUpperCase().trim();
+    if (!clientUpper) { showAlert("Campo obligatorio", "El nombre del cliente es obligatorio"); return; }
+
+    if (!id) {
+      const [{ data: matDups }, { data: ordDups }] = await Promise.all([
+        supabase.from('unico_materials').select('id, payload').limit(500),
+        supabase.from('unico_orders').select('id, payload').limit(500),
+      ]);
+      const inMat = (matDups || []).some((r: any) => r.payload?.client?.toUpperCase().trim() === clientUpper);
+      const inOrd = (ordDups || []).some((r: any) => r.payload?.client?.toUpperCase().trim() === clientUpper);
+      if (inMat || inOrd) { showAlert("Cliente duplicado", `Ya existe un registro con el cliente "${clientUpper}"`); return; }
+    }
+
     if (targetCategory === 'PROGRAMADA' && !isEditingEntregas) {
       setShowDeliveryModal(true);
       return;
@@ -169,7 +187,7 @@ const FormScreen: React.FC = () => {
       localStorage.removeItem(draftKey);
       navigate(`/list/${targetCategory}`);
     } catch (error: any) {
-      alert("Error al guardar: " + (error?.message || JSON.stringify(error)));
+      showAlert("Error al guardar", error?.message || "Ha ocurrido un error. Inténtalo de nuevo.", 'bg-red-600', <AlertCircle size={28} className="text-white" />);
     } finally {
       setLoading(false);
     }
@@ -178,6 +196,7 @@ const FormScreen: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen bg-slate-950 text-white w-full">
 
+      {modal && <AppModal {...modal} />}
       {showDeliveryModal && (
         <DeliveryModal
           onConfirm={handleDeliveryConfirm}
@@ -276,7 +295,7 @@ const FormScreen: React.FC = () => {
             />
 
             {/* ✅ Campo fecha/hora EDITABLE directamente si ya es un registro de ENTREGAS */}
-            {(isEntregas || isEditingEntregas) && (
+            {isEditingEntregas && (
               <div className="space-y-2">
                 <label className="block text-[10px] font-black uppercase text-slate-500 ml-2 flex items-center gap-2">
                   <Clock size={12} className="text-indigo-400" />

@@ -1,6 +1,8 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, Plus, Trash2, MapPin, Search, X, Image as ImageIcon, Edit3, FileText, Clock, CalendarClock } from 'lucide-react';
+import { ChevronLeft, Plus, Trash2, MapPin, Search, X, Image as ImageIcon, Edit3, FileText, Clock, CalendarClock, Truck, Loader2, AlertCircle } from 'lucide-react';
+import { supabase } from '../supabase';
+import AppModal from './AppModal';
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
 const colors: Record<string, string> = {
@@ -48,6 +50,52 @@ const getDeliveryStyle = (dt: string) => {
   }
 };
 
+const DeliveryModal: React.FC<{
+  onConfirm: (datetime: string | null) => void;
+  onCancel: () => void;
+  loading: boolean;
+}> = ({ onConfirm, onCancel, loading }) => {
+  const [value, setValue] = useState('');
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-sm">
+      <div className="bg-slate-900 border border-slate-800 rounded-[2.5rem] p-8 max-w-sm w-full shadow-2xl space-y-6">
+        <div className="flex flex-col items-center gap-3">
+          <div className="bg-indigo-600 p-3 rounded-2xl">
+            <Clock size={28} className="text-white" />
+          </div>
+          <h3 className="text-white text-xl font-black text-center uppercase tracking-widest">Fecha de Entrega</h3>
+          <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest text-center">
+            Opcional — déjalo vacío si no hay fecha fijada
+          </p>
+        </div>
+        <input
+          type="datetime-local"
+          value={value}
+          onChange={e => setValue(e.target.value)}
+          className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-white font-bold text-sm outline-none focus:border-indigo-500 transition-all"
+        />
+        <div className="space-y-3">
+          <button
+            onClick={() => onConfirm(value || null)}
+            disabled={loading}
+            className="w-full bg-indigo-600 py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all text-white flex items-center justify-center gap-2"
+          >
+            {loading && <Loader2 className="animate-spin" size={18} />}
+            {value ? 'Confirmar Fecha' : 'Sin Fecha — Continuar'}
+          </button>
+          <button
+            onClick={onCancel}
+            disabled={loading}
+            className="w-full bg-slate-800 py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest active:scale-95 transition-all text-slate-400"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ListScreen: React.FC<{ orders: any[], onDelete: (id: string) => void, isAdmin: boolean }> = ({ orders, onDelete, isAdmin }) => {
   const { category } = useParams();
   const nav = useNavigate();
@@ -56,6 +104,31 @@ const ListScreen: React.FC<{ orders: any[], onDelete: (id: string) => void, isAd
   const data = orders.filter(o => o.category?.toUpperCase() === currentCat);
   const [search, setSearch] = useState("");
   const [fullscreenImg, setFullscreenImg] = useState<string | null>(null);
+  const [moveTarget, setMoveTarget] = useState<any | null>(null);
+  const [isMoving, setIsMoving] = useState(false);
+  const [modal, setModal] = useState<any>(null);
+
+  const showConfirm = (title: string, message: string, onConfirm: () => void) =>
+    setModal({ title, message, icon: <Trash2 size={28} className="text-white" />, iconBg: 'bg-red-600', confirmText: 'BORRAR', confirmClass: 'bg-red-600', onConfirm: () => { setModal(null); onConfirm(); }, onCancel: () => setModal(null) });
+
+  const handleMoveToEntregas = async (datetime: string | null) => {
+    if (!moveTarget) return;
+    setIsMoving(true);
+    try {
+      const { id, category: _cat, date: _date, status: _status, created_at, ...payloadFields } = moveTarget;
+      const updatedPayload = { ...payloadFields, deliveryDatetime: datetime || '' };
+      await supabase
+        .from('unico_orders')
+        .update({ payload: updatedPayload, category: 'PROGRAMADA' })
+        .eq('id', id);
+      setMoveTarget(null);
+      nav('/list/PROGRAMADA');
+    } catch {
+      setModal({ title: 'Error', message: 'No se pudo mover a Entregas. Inténtalo de nuevo.', icon: <AlertCircle size={28} className="text-white" />, iconBg: 'bg-red-600', onConfirm: () => setModal(null) });
+    } finally {
+      setIsMoving(false);
+    }
+  };
 
   const showBadges = CATEGORIES_WITH_BADGES.includes(currentCat);
   const isEntregas = currentCat === 'PROGRAMADA';
@@ -85,22 +158,40 @@ const ListScreen: React.FC<{ orders: any[], onDelete: (id: string) => void, isAd
   return (
     <div className="flex flex-col h-screen bg-slate-950 overflow-hidden relative">
 
+      {modal && <AppModal {...modal} />}
+
+      {/* Modal mover a Entregas */}
+      {moveTarget && (
+        <DeliveryModal
+          onConfirm={handleMoveToEntregas}
+          onCancel={() => setMoveTarget(null)}
+          loading={isMoving}
+        />
+      )}
+
       {/* Imagen fullscreen */}
       {fullscreenImg && (
-        <div className="fixed inset-0 z-[110] bg-black flex items-center justify-center p-6">
+        <div className="fixed inset-0 z-[110] bg-black/95 backdrop-blur-sm flex items-center justify-center">
           <button
             onClick={() => setFullscreenImg(null)}
-            className="absolute top-6 right-6 z-[120] p-3 bg-white/10 rounded-full text-white backdrop-blur-md border border-white/20 active:scale-90 transition-all"
+            className="absolute top-5 right-5 z-[120] p-2.5 bg-white/10 rounded-full text-white border border-white/15 active:scale-90 transition-all"
           >
-            <X size={28} />
+            <X size={22} />
           </button>
-          <div className="w-full h-full flex items-center justify-center max-w-7xl mx-auto">
-            <TransformWrapper initialScale={1} minScale={1} maxScale={5} centerOnInit={true}>
-              <TransformComponent wrapperStyle={{ width: "100vw", height: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <img src={fullscreenImg} className="max-w-full max-h-screen object-contain rounded-xl shadow-2xl" />
-              </TransformComponent>
-            </TransformWrapper>
-          </div>
+          <TransformWrapper initialScale={1} minScale={0.3} maxScale={8} centerOnInit={true}>
+            <TransformComponent
+              wrapperStyle={{ width: "100vw", height: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}
+              contentStyle={{ display: "flex", alignItems: "center", justifyContent: "center" }}
+            >
+              <img
+                src={fullscreenImg}
+                style={{ width: "100vw", height: "100vh", objectFit: "contain" }}
+              />
+            </TransformComponent>
+          </TransformWrapper>
+          <span className="absolute bottom-5 left-1/2 -translate-x-1/2 text-white/25 text-[9px] font-black uppercase tracking-widest pointer-events-none">
+            Pellizca para zoom
+          </span>
         </div>
       )}
 
@@ -224,7 +315,7 @@ const ListScreen: React.FC<{ orders: any[], onDelete: (id: string) => void, isAd
                         <Edit3 size={16} />
                       </button>
                       <button
-                        onClick={() => { if (window.confirm("¿BORRAR?")) onDelete(o.id); }}
+                        onClick={() => showConfirm("¿Borrar registro?", `Se eliminará "${o.client}" de forma permanente.`, () => onDelete(o.id))}
                         className="p-2 bg-red-500/10 rounded-lg text-red-500 border border-red-500/20 active:scale-90 transition-all"
                       >
                         <Trash2 size={16} />

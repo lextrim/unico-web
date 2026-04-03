@@ -53,11 +53,9 @@ const App: React.FC = () => {
   }, [location.pathname, isAPK]);
 
   const handleDelete = async (id: string) => {
-    if(window.confirm("¿BORRAR REGISTRO?")) {
-      await supabase.from('unico_orders').delete().eq('id', id);
-      await supabase.from('unico_materials').delete().eq('id', id);
-      loadData();
-    }
+    await supabase.from('unico_orders').delete().eq('id', id);
+    await supabase.from('unico_materials').delete().eq('id', id);
+    loadData();
   };
 
   if (loading) return <div className="h-screen bg-slate-950 flex items-center justify-center text-white font-black uppercase tracking-widest">Cargando...</div>;
