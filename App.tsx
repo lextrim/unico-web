@@ -29,8 +29,7 @@ const App: React.FC = () => {
 
       if (cur || isAPK) {
         if (cur) {
-          const { data: role, error: roleError } = await supabase.from('unico_roles').select('*').eq('email', cur.user.email);
-          console.log('[roles]', role, roleError);
+          const { data: role } = await supabase.from('unico_roles').select('*').eq('email', cur.user.email);
           if (role && role.length > 0) setUserRole(role[0].role as 'admin' | 'viewer');
         }
 
