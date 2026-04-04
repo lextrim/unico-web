@@ -19,19 +19,17 @@ const App: React.FC = () => {
   const location = useLocation();
 
   const isAPK = /wv|android|iphone/i.test(navigator.userAgent) && !/chrome|safari/i.test(navigator.userAgent) || /wv/i.test(navigator.userAgent);
-  const isAdmin = isAPK || userRole === 'admin';
-  const isViewer = !isAPK && userRole === 'viewer';
+  const isAdmin = userRole === 'admin';
+  const isViewer = userRole === 'viewer';
 
   const loadData = async () => {
     try {
       const { data: { session: cur } } = await supabase.auth.getSession();
       setSession(cur);
 
-      if (cur || isAPK) {
-        if (cur) {
-          const { data: role } = await supabase.from('unico_roles').select('*').eq('email', cur.user.email);
-          if (role && role.length > 0) setUserRole(role[0].role as 'admin' | 'viewer');
-        }
+      if (cur) {
+        const { data: role } = await supabase.from('unico_roles').select('*').eq('email', cur.user.email);
+        if (role && role.length > 0) setUserRole(role[0].role as 'admin' | 'viewer');
 
         const { data: m } = await supabase.from('unico_materials').select('*');
         const { data: o } = await supabase.from('unico_orders').select('*');
@@ -72,7 +70,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-950">
-      {!session && !isAPK ? <LoginScreen /> : (
+      {!session ? <LoginScreen /> : (
         <Routes>
           <Route path="/" element={<Navigate to="/menu" replace />} />
           <Route path="/menu" element={<MenuScreen isAdmin={isAdmin} isViewer={isViewer} isAPK={isAPK} />} />

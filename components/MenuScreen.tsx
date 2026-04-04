@@ -55,16 +55,14 @@ const MenuScreen: React.FC<{ isAdmin: boolean, isViewer: boolean, isAPK: boolean
       </div>
 
       {/* ⚡ El botón de salir se queda siempre visible abajo sin empujar la pantalla */}
-      {!isAPK && (
-        <div className="w-full max-w-xl mt-4 pb-2">
-            <button
-              onClick={() => supabase.auth.signOut()}
-              className="w-full py-4 flex items-center justify-center gap-2 text-slate-600 font-black uppercase text-[10px] tracking-widest border border-slate-900 rounded-2xl active:scale-90 transition-all"
-            >
-              <LogOut size={14} /> Cerrar Sesión
-            </button>
-        </div>
-      )}
+      <div className="w-full max-w-xl mt-4 pb-2">
+          <button
+            onClick={() => supabase.auth.signOut()}
+            className="w-full py-4 flex items-center justify-center gap-2 text-slate-600 font-black uppercase text-[10px] tracking-widest border border-slate-900 rounded-2xl active:scale-90 transition-all"
+          >
+            <LogOut size={14} /> Cerrar Sesión
+          </button>
+      </div>
     </div>
   );
 };
