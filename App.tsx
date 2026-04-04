@@ -14,12 +14,13 @@ import BackupScreen from './components/BackupScreen';
 const App: React.FC = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isAdminFromDB, setIsAdminFromDB] = useState(false);
+  const [userRole, setUserRole] = useState<'admin' | 'viewer' | null>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const location = useLocation();
 
   const isAPK = /wv|android|iphone/i.test(navigator.userAgent) && !/chrome|safari/i.test(navigator.userAgent) || /wv/i.test(navigator.userAgent);
-  const isAdmin = isAPK || isAdminFromDB;
+  const isAdmin = isAPK || userRole === 'admin';
+  const isViewer = !isAPK && userRole === 'viewer';
 
   const loadData = async () => {
     try {
@@ -28,8 +29,9 @@ const App: React.FC = () => {
 
       if (cur || isAPK) {
         if (cur) {
-          const { data: role } = await supabase.from('unico_roles').select('*').eq('email', cur.user.email);
-          if (role && role.length > 0) setIsAdminFromDB(role[0].role === 'admin');
+          const { data: role, error: roleError } = await supabase.from('unico_roles').select('*').eq('email', cur.user.email);
+          console.log('[roles]', role, roleError);
+          if (role && role.length > 0) setUserRole(role[0].role as 'admin' | 'viewer');
         }
 
         const { data: m } = await supabase.from('unico_materials').select('*');
@@ -47,10 +49,19 @@ const App: React.FC = () => {
     finally { setLoading(false); }
   };
 
-  // ⚡ RECARGA AUTOMÁTICA: Detecta cuando navegas y trae los datos frescos de Supabase
+  // Carga inicial y detecta cambios de sesión (login/logout)
   useEffect(() => {
     loadData();
-  }, [location.pathname, isAPK]);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      loadData();
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Recarga datos frescos al navegar entre pantallas
+  useEffect(() => {
+    if (!loading) loadData();
+  }, [location.pathname]);
 
   const handleDelete = async (id: string) => {
     await supabase.from('unico_orders').delete().eq('id', id);
@@ -65,12 +76,12 @@ const App: React.FC = () => {
       {!session && !isAPK ? <LoginScreen /> : (
         <Routes>
           <Route path="/" element={<Navigate to="/menu" replace />} />
-          <Route path="/menu" element={<MenuScreen isAdmin={isAdmin} isAPK={isAPK} />} />
+          <Route path="/menu" element={<MenuScreen isAdmin={isAdmin} isViewer={isViewer} isAPK={isAPK} />} />
           <Route path="/material" element={<MaterialScreen orders={orders} isAdmin={isAdmin} />} />
           <Route path="/list/:category" element={<ListScreen orders={orders} onDelete={handleDelete} isAdmin={isAdmin} />} />
           <Route path="/form/:category" element={isAdmin ? <FormScreen /> : <Navigate to="/menu" />} />
           <Route path="/form/:category/:id" element={isAdmin ? <FormScreen /> : <Navigate to="/menu" />} />
-          <Route path="/informes" element={isAdmin ? <InformesScreen isAdmin={isAdmin} isAPK={isAPK} /> : <Navigate to="/menu" />} />
+          <Route path="/informes" element={(isAdmin || isViewer) ? <InformesScreen isAdmin={isAdmin || isViewer} isAPK={isAPK} /> : <Navigate to="/menu" />} />
           <Route path="/backup" element={isAdmin ? <BackupScreen /> : <Navigate to="/menu" />} />
         </Routes>
       )}

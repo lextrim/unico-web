@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Package, Hammer, CheckCircle, Truck, AlertTriangle, FileText, ShieldCheck, LogOut } from 'lucide-react';
 import { supabase } from '../supabase';
 
-const MenuScreen: React.FC<{ isAdmin: boolean, isAPK: boolean }> = ({ isAdmin, isAPK }) => {
+const MenuScreen: React.FC<{ isAdmin: boolean, isViewer: boolean, isAPK: boolean }> = ({ isAdmin, isViewer, isAPK }) => {
   const navigate = useNavigate();
 
   const items = [
@@ -24,7 +24,7 @@ const MenuScreen: React.FC<{ isAdmin: boolean, isAPK: boolean }> = ({ isAdmin, i
 
         <div className="w-full text-center px-2">
           <h1 className="text-4xl font-black text-white tracking-tighter uppercase leading-none break-words">GESTION DE MATERIAL</h1>
-          {!isAdmin && <p className="text-slate-500 font-black uppercase text-[10px] tracking-[0.2em] mt-3">Modo Invitado</p>}
+          {isViewer && <p className="text-slate-500 font-black uppercase text-[10px] tracking-[0.2em] mt-3">Modo Consulta</p>}
         </div>
 
         <div className="w-full grid grid-cols-2 gap-3">

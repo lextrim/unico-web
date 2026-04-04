@@ -11,11 +11,11 @@ const getBadgeClass = (isActive: boolean) =>
   } uppercase`;
 
 const STATUS_COLORS: Record<string, string> = {
-  MATERIALES:   'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  ARMANDOSE:    'bg-orange-500/20 text-orange-400 border-orange-500/30',
-  TERMINADA:    'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-  PROGRAMADA:   'bg-indigo-500/20 text-indigo-400 border-indigo-500/30',
-  TERMINACIONES:'bg-red-500/20 text-red-400 border-red-500/30',
+  MATERIALES:    'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  ARMANDOSE:     'bg-orange-500/20 text-orange-400 border-orange-500/30',
+  TERMINADA:     'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+  PROGRAMADA:    'bg-indigo-500/20 text-indigo-400 border-indigo-500/30',
+  TERMINACIONES: 'bg-red-500/20 text-red-400 border-red-500/30',
 };
 
 const STATUS_LABEL: Record<string, string> = { PROGRAMADA: 'ENTREGAS' };
@@ -36,20 +36,12 @@ const diffLabel = (ms: number) => {
   return `${d}d`;
 };
 
-const openPrintWindow = (html: string) => {
-  const win = window.open('', '_blank');
-  if (!win) return;
-  win.document.write(html);
-  win.document.close();
-  win.focus();
-  setTimeout(() => { win.print(); }, 400);
-};
-
 const printBase = (title: string, subtitle: string, body: string) => `
   <!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title>
   <style>
+    @page{margin:15mm}
     *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:Arial,sans-serif;padding:24px;color:#000}
+    body{font-family:Arial,sans-serif;color:#000;width:100%}
     h1{font-size:15px;font-weight:bold;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
     .sub{font-size:9px;color:#64748b;margin-bottom:18px}
     table{width:100%;border-collapse:collapse;font-size:10px}
@@ -64,23 +56,36 @@ const printBase = (title: string, subtitle: string, body: string) => `
     .card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
     .card-meta{font-size:9px;color:#64748b;margin-top:3px}
     .elapsed{font-size:8px;color:#94a3b8;font-style:italic;margin:4px 0 2px 13px}
-    @media print{body{padding:0}}
   </style></head><body>
   <h1>${title}</h1><p class="sub">${subtitle}</p>
   ${body}
   </body></html>`;
 
-const InformesScreen: React.FC<{ isAdmin: boolean; isAPK: boolean }> = ({ isAdmin }) => {
+
+const InformesScreen: React.FC<{ isAdmin: boolean; isAPK: boolean }> = ({ isAdmin, isAPK }) => {
   const navigate = useNavigate();
-  const [records, setRecords]     = useState<any[]>([]);
-  const [loading, setLoading]     = useState(true);
-  const [printing, setPrinting]   = useState(false);
-  const [search, setSearch]       = useState('');
+  const [records, setRecords]           = useState<any[]>([]);
+  const [loading, setLoading]           = useState(true);
+  const [printing, setPrinting]         = useState(false);
+  const [search, setSearch]             = useState('');
   const [statusFilter, setStatusFilter] = useState('TODOS');
-  const [dateFrom, setDateFrom]   = useState('');
-  const [dateTo, setDateTo]       = useState('');
+  const [dateFrom, setDateFrom]         = useState('');
+  const [dateTo, setDateTo]             = useState('');
   const [traceRecord, setTraceRecord]   = useState<any | null>(null);
   const [traceRecords, setTraceRecords] = useState<any[]>([]);
+  const openPrintWindow = (html: string) => {
+    if (isAPK) {
+      // Usa el bridge nativo Android para el diálogo de impresión real
+      (window as any).AndroidBridge?.printHtml(html);
+      return;
+    }
+    const win = window.open('', '_blank');
+    if (!win) { alert('Permite ventanas emergentes para imprimir'); return; }
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    setTimeout(() => { win.print(); }, 400);
+  };
 
   const fetchAllData = async () => {
     setLoading(true);
@@ -121,28 +126,45 @@ const InformesScreen: React.FC<{ isAdmin: boolean; isAPK: boolean }> = ({ isAdmi
     });
   }, [records, search, statusFilter, dateFrom, dateTo]);
 
-  const handlePrintReport = () => {
+  const handlePrintReport = async () => {
     if (filteredRecords.length === 0) return;
     setPrinting(true);
-    const title = statusFilter === 'TODOS' ? 'INFORME GENERAL' : `INFORME · ${label(statusFilter)}`;
-    const subtitle = `Generado: ${new Date().toLocaleString('es-ES')} · Total: ${filteredRecords.length} registros`;
-    const rows = filteredRecords.map(r => `
-      <tr>
-        <td>${r.date.toLocaleDateString('es-ES')}</td>
-        <td><strong>${r.client || ''}</strong></td>
-        <td><span class="badge" style="${PRINT_BADGE[r.status] || 'background:#f1f5f9;color:#475569'}">${label(r.status)}</span></td>
-        <td>${r.ubicado || ''}</td>
-        <td style="text-align:center">${r.cascos ? '✓' : '—'}</td>
-        <td style="text-align:center">${r.puertas ? '✓' : '—'}</td>
-        <td style="text-align:center">${r.tiradores ? '✓' : '—'}</td>
-        <td>${r.deliveryDatetime ? new Date(r.deliveryDatetime).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''}</td>
-        <td>${r.notes || ''}</td>
-      </tr>`).join('');
-    const body = `<table>
-      <thead><tr><th>Fecha</th><th>Cliente</th><th>Estado</th><th>Ubicación</th><th>CA</th><th>PT</th><th>TR</th><th>Entrega</th><th>Notas</th></tr></thead>
-      <tbody>${rows}</tbody></table>`;
-    openPrintWindow(printBase(title, subtitle, body));
-    setPrinting(false);
+    try {
+      const title = statusFilter === 'TODOS' ? 'INFORME GENERAL' : `INFORME · ${label(statusFilter)}`;
+      const subtitle = `Generado: ${new Date().toLocaleString('es-ES')} · Total: ${filteredRecords.length} registros`;
+      const ORDER = ['MATERIALES', 'ARMANDOSE', 'TERMINADA', 'PROGRAMADA', 'TERMINACIONES'];
+      const grouped = ORDER
+        .map(s => ({ status: s, items: filteredRecords.filter(r => r.status === s) }))
+        .filter(g => g.items.length > 0);
+      // Añadir categorías no contempladas al final
+      const known = new Set(ORDER);
+      const others = filteredRecords.filter(r => !known.has(r.status));
+      if (others.length) grouped.push({ status: 'OTROS', items: others });
+
+      const thead = `<thead><tr><th>Fecha</th><th>Cliente</th><th>Ubicación</th><th>CA</th><th>PT</th><th>TR</th><th>Entrega</th><th>Notas</th></tr></thead>`;
+      const makeRows = (items: any[]) => items.map(r => `
+        <tr>
+          <td>${r.date.toLocaleDateString('es-ES')}</td>
+          <td><strong>${r.client || ''}</strong></td>
+          <td>${r.ubicado || ''}</td>
+          <td style="text-align:center">${r.cascos ? '✓' : '—'}</td>
+          <td style="text-align:center">${r.puertas ? '✓' : '—'}</td>
+          <td style="text-align:center">${r.tiradores ? '✓' : '—'}</td>
+          <td>${r.deliveryDatetime ? new Date(r.deliveryDatetime).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''}</td>
+          <td>${r.notes || ''}</td>
+        </tr>`).join('');
+
+      const body = grouped.map(g => `
+        <div style="margin-bottom:20px">
+          <div style="background:${PRINT_BADGE[g.status]?.split(';')[0]?.replace('background:','') || '#f1f5f9'};color:${PRINT_BADGE[g.status]?.split(';')[1]?.replace('color:','') || '#475569'};padding:5px 10px;font-weight:900;font-size:10px;text-transform:uppercase;letter-spacing:.08em;border-radius:4px 4px 0 0;display:inline-block;margin-bottom:4px">
+            ${label(g.status)} · ${g.items.length} registro${g.items.length !== 1 ? 's' : ''}
+          </div>
+          <table>${thead}<tbody>${makeRows(g.items)}</tbody></table>
+        </div>`).join('');
+      openPrintWindow(printBase(title, subtitle, body));
+    } finally {
+      setPrinting(false);
+    }
   };
 
   const handlePrintTrace = () => {
@@ -182,6 +204,7 @@ const InformesScreen: React.FC<{ isAdmin: boolean; isAPK: boolean }> = ({ isAdmi
   if (!isAdmin) return (
     <div className="p-10 text-white font-black uppercase text-center">Acceso Denegado</div>
   );
+
 
   return (
     <div className="flex flex-col h-screen bg-slate-950 text-white overflow-hidden">
@@ -302,7 +325,6 @@ const InformesScreen: React.FC<{ isAdmin: boolean; isAPK: boolean }> = ({ isAdmi
       <div className="bg-slate-950/95 p-4 border-b border-slate-900">
         <div className="max-w-xl mx-auto space-y-3">
 
-          {/* Select tipo de informe */}
           <select
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
@@ -316,7 +338,6 @@ const InformesScreen: React.FC<{ isAdmin: boolean; isAPK: boolean }> = ({ isAdmi
             <option value="TERMINACIONES">TERMINACIONES</option>
           </select>
 
-          {/* Búsqueda */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
             <input
@@ -327,7 +348,6 @@ const InformesScreen: React.FC<{ isAdmin: boolean; isAPK: boolean }> = ({ isAdmi
             />
           </div>
 
-          {/* Rango de fechas */}
           <div className="flex gap-2 items-center">
             <input
               type="date"

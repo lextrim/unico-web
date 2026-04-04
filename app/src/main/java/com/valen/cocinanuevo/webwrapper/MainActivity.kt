@@ -9,6 +9,8 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.print.PrintAttributes
+import android.print.PrintManager
 import android.provider.MediaStore
 import android.util.Base64
 import android.view.View
@@ -77,6 +79,8 @@ class MainActivity : AppCompatActivity() {
             webSettings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
         }
 
+        myWebView?.addJavascriptInterface(AndroidBridge(), "AndroidBridge")
+
         myWebView?.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
@@ -138,5 +142,28 @@ class MainActivity : AppCompatActivity() {
     private fun createImageFile(): File {
         val storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
         return File.createTempFile("IMG_${System.currentTimeMillis()}_", ".jpg", storageDir)
+    }
+
+    inner class AndroidBridge {
+        @JavascriptInterface
+        fun printHtml(htmlContent: String) {
+            runOnUiThread {
+                val printWebView = WebView(this@MainActivity)
+                printWebView.webViewClient = object : WebViewClient() {
+                    override fun onPageFinished(view: WebView?, url: String?) {
+                        val printManager = getSystemService(PRINT_SERVICE) as PrintManager
+                        val printAdapter = view!!.createPrintDocumentAdapter("Informe UnicoWeb")
+                        printManager.print(
+                            "Informe UnicoWeb",
+                            printAdapter,
+                            PrintAttributes.Builder().build()
+                        )
+                    }
+                }
+                printWebView.loadDataWithBaseURL(
+                    null, htmlContent, "text/html", "UTF-8", null
+                )
+            }
+        }
     }
 }
