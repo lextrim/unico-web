@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Package, Hammer, CheckCircle, Truck, AlertTriangle, FileText, ShieldCheck, LogOut } from 'lucide-react';
 import { supabase } from '../supabase';
@@ -7,12 +6,12 @@ const MenuScreen: React.FC<{ isAdmin: boolean, isViewer: boolean, isAPK: boolean
   const navigate = useNavigate();
 
   const items = [
-    { label: 'Materiales', icon: <Package />, path: '/material', color: 'bg-blue-600' },
-    { label: 'Armándose', icon: <Hammer />, path: '/list/ARMANDOSE', color: 'bg-orange-600' },
-    { label: 'Terminada', icon: <CheckCircle />, path: '/list/TERMINADA', color: 'bg-emerald-600' },
-    { label: 'Entregas', icon: <Truck />, path: '/list/PROGRAMADA', color: 'bg-indigo-600' },
-    { label: 'Terminaciones', icon: <AlertTriangle />, path: '/list/TERMINACIONES', color: 'bg-red-600' },
-    { label: 'Informes', icon: <FileText />, path: '/informes', color: 'bg-slate-600' },
+    { label: 'Materiales', icon: Package, path: '/material', color: 'bg-blue-600' },
+    { label: 'Armándose', icon: Hammer, path: '/list/ARMANDOSE', color: 'bg-orange-600' },
+    { label: 'Terminada', icon: CheckCircle, path: '/list/TERMINADA', color: 'bg-emerald-600' },
+    { label: 'Entregas', icon: Truck, path: '/list/PROGRAMADA', color: 'bg-indigo-600' },
+    { label: 'Terminaciones', icon: AlertTriangle, path: '/list/TERMINACIONES', color: 'bg-red-600' },
+    { label: 'Informes', icon: FileText, path: '/informes', color: 'bg-slate-600' },
   ];
 
   return (
@@ -34,7 +33,7 @@ const MenuScreen: React.FC<{ isAdmin: boolean, isViewer: boolean, isAPK: boolean
               onClick={() => navigate(i.path)}
               className={`${i.color} p-5 rounded-3xl flex flex-col items-center justify-center gap-3 shadow-xl active:scale-95 transition-all`}
             >
-              <div className="text-white">{React.cloneElement(i.icon as React.ReactElement, { size: 32 })}</div>
+              <i.icon size={32} className="text-white" />
               <span className="text-white font-black uppercase text-[10px] tracking-widest">{i.label}</span>
             </button>
           ))}
