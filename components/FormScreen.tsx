@@ -75,7 +75,13 @@ const FormScreen: React.FC = () => {
     const { name, value, type } = e.target;
     setFormData((prev: any) => {
       const newData = { ...prev };
-      newData[name] = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
+      if (type === 'checkbox') {
+        newData[name] = (e.target as HTMLInputElement).checked;
+      } else if (name === 'client') {
+        newData[name] = value.toUpperCase();
+      } else {
+        newData[name] = value;
+      }
       localStorage.setItem(draftKey, JSON.stringify(newData));
       return newData;
     });
@@ -89,13 +95,19 @@ const FormScreen: React.FC = () => {
     if (!clientUpper) { showAlert("Campo obligatorio", "El nombre del cliente es obligatorio"); return; }
 
     if (!id) {
-      const [{ data: matDups }, { data: ordDups }] = await Promise.all([
-        supabase.from('unico_materials').select('id, payload').limit(500),
-        supabase.from('unico_orders').select('id, payload').limit(500),
-      ]);
-      const inMat = (matDups || []).some((r: any) => r.payload?.client?.toUpperCase().trim() === clientUpper);
-      const inOrd = (ordDups || []).some((r: any) => r.payload?.client?.toUpperCase().trim() === clientUpper);
-      if (inMat || inOrd) { showAlert("Cliente duplicado", `Ya existe un registro con el cliente "${clientUpper}"`); return; }
+      const FINAL_STATES = ['TERMINADA', 'TERMINACIONES'];
+      if (targetCategory === 'MATERIALES') {
+        const { data: matDups } = await supabase.from('unico_materials').select('id, payload').limit(500);
+        const isDup = (matDups || []).some((r: any) => r.payload?.client?.toUpperCase().trim() === clientUpper);
+        if (isDup) { showAlert("Cliente duplicado", `Ya existe un material con el cliente "${clientUpper}"`); return; }
+      } else {
+        const { data: ordDups } = await supabase.from('unico_orders').select('id, payload, category').limit(500);
+        const isDup = (ordDups || []).some((r: any) =>
+          r.payload?.client?.toUpperCase().trim() === clientUpper &&
+          !FINAL_STATES.includes((r.category || '').toUpperCase())
+        );
+        if (isDup) { showAlert("Cliente duplicado", `Ya existe un pedido activo con el cliente "${clientUpper}"`); return; }
+      }
     }
 
     if (targetCategory === 'PROGRAMADA' && !isEditingEntregas) {
@@ -225,6 +237,7 @@ const FormScreen: React.FC = () => {
               value={formData.client || ''}
               onChange={handleInputChange}
               className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-white font-bold text-sm outline-none"
+              style={{ textTransform: 'uppercase' }}
               placeholder="CLIENTE"
             />
 

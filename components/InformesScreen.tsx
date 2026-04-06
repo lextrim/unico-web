@@ -41,7 +41,7 @@ const printBase = (title: string, subtitle: string, body: string) => `
   <style>
     @page{margin:15mm}
     *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:Arial,sans-serif;color:#000;width:100%}
+    body{font-family:Arial,sans-serif;color:#000;width:100%;text-transform:uppercase}
     h1{font-size:15px;font-weight:bold;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
     .sub{font-size:9px;color:#64748b;margin-bottom:18px}
     table{width:100%;border-collapse:collapse;font-size:10px}

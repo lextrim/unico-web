@@ -19,7 +19,12 @@ const BackupScreen = () => {
       const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = url; link.download = `BACKUP_UNICO_${new Date().toISOString().split('T')[0]}.json`; link.click();
+      link.href = url;
+      link.download = `BACKUP_UNICO_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
       setStatus({ type: 'success', msg: 'COPIA DESCARGADA' });
     } catch (err: any) { setStatus({ type: 'error', msg: 'ERROR' }); }
     finally { setLoading(false); }

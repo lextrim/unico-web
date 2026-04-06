@@ -4,6 +4,9 @@
     package="com.valen.cocinanuevo.webwrapper">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <uses-permission
         android:name="android.permission.CAMERA"
@@ -35,6 +38,26 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Receptor de alarmas de entrega -->
+        <receiver
+            android:name=".DeliveryAlarmReceiver"
+            android:exported="false" />
+
+        <!-- Receptor de posponer -->
+        <receiver
+            android:name=".SnoozeReceiver"
+            android:exported="false" />
+
+        <!-- Receptor de arranque: reprograma notificaciones tras reinicio -->
+        <receiver
+            android:name=".BootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
 
         <provider
             android:name="androidx.core.content.FileProvider"

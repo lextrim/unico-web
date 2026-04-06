@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { supabase } from './supabase';
 import { Session } from '@supabase/supabase-js';
+import { Bell, X } from 'lucide-react';
 
 import MenuScreen from './components/MenuScreen';
 import MaterialScreen from './components/MaterialScreen';
@@ -16,6 +17,7 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<'admin' | 'viewer' | null>(null);
   const [orders, setOrders] = useState<any[]>([]);
+  const [deliveryAlerts, setDeliveryAlerts] = useState<Array<{ id: string; client: string; message: string }>>([]);
   const location = useLocation();
 
   const isAPK = /wv|android|iphone/i.test(navigator.userAgent) && !/chrome|safari/i.test(navigator.userAgent) || /wv/i.test(navigator.userAgent);
@@ -25,11 +27,27 @@ const App: React.FC = () => {
   const loadData = async () => {
     try {
       const { data: { session: cur } } = await supabase.auth.getSession();
-      setSession(cur);
 
       if (cur) {
+        // Rechazar usuarios anónimos (sin email) o sin rol asignado
+        if (!cur.user.email) {
+          await supabase.auth.signOut();
+          setSession(null);
+          setUserRole(null);
+          return;
+        }
+
         const { data: role } = await supabase.from('unico_roles').select('*').eq('email', cur.user.email);
-        if (role && role.length > 0) setUserRole(role[0].role as 'admin' | 'viewer');
+
+        if (!role || role.length === 0) {
+          await supabase.auth.signOut();
+          setSession(null);
+          setUserRole(null);
+          return;
+        }
+
+        setSession(cur);
+        setUserRole(role[0].role as 'admin' | 'viewer');
 
         const { data: m } = await supabase.from('unico_materials').select('*');
         const { data: o } = await supabase.from('unico_orders').select('*');
@@ -41,6 +59,9 @@ const App: React.FC = () => {
           return { id: x.id, ...p, category: cat, image_url: p.image_url || p.image || null, created_at: x.created_at };
         });
         setOrders([...formattedM, ...formattedO]);
+      } else {
+        setSession(null);
+        setUserRole(null);
       }
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
@@ -60,9 +81,111 @@ const App: React.FC = () => {
     if (!loading) loadData();
   }, [location.pathname]);
 
+  // Alarmas nativas Android (funcionan con app cerrada y pantalla bloqueada)
+  useEffect(() => {
+    if (!isAPK || !session) return;
+    const bridge = (window as any).AndroidBridge;
+    if (!bridge?.scheduleNotification) return;
+
+    const now = Date.now();
+    orders
+      .filter(o => o.category === 'PROGRAMADA' && o.deliveryDatetime)
+      .forEach(order => {
+        const t = new Date(order.deliveryDatetime).getTime();
+        const hora = new Date(t).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        const client = (order.client || 'CLIENTE').toUpperCase();
+
+        // Alarma en el momento exacto de la entrega
+        if (t > now) {
+          bridge.scheduleNotification(
+            `${order.id}_due`,
+            `HORA DE ENTREGA: ${client}`,
+            `Entrega programada para las ${hora}`,
+            String(t)
+          );
+        }
+        // Alarma 30 minutos antes
+        const thirtyBefore = t - 30 * 60 * 1000;
+        if (thirtyBefore > now) {
+          bridge.scheduleNotification(
+            `${order.id}_30min`,
+            `ENTREGA EN 30 MIN: ${client}`,
+            `Entrega a las ${hora}`,
+            String(thirtyBefore)
+          );
+        }
+      });
+  }, [orders, session, isAPK]);
+
+  // Notificaciones en navegador web (banner in-app + Web Notifications)
+  useEffect(() => {
+    if (!orders.length || !session) return;
+
+    const NOTIFIED_KEY = 'unico_delivery_notified';
+
+    const getNotified = (): Set<string> => {
+      try { return new Set(JSON.parse(localStorage.getItem(NOTIFIED_KEY) || '[]')); }
+      catch { return new Set(); }
+    };
+
+    const saveNotified = (s: Set<string>) => {
+      try { localStorage.setItem(NOTIFIED_KEY, JSON.stringify(Array.from(s).slice(-300))); }
+      catch {}
+    };
+
+    const checkDeliveries = () => {
+      const now = Date.now();
+      const notified = getNotified();
+      const newAlerts: Array<{ id: string; client: string; message: string }> = [];
+      let changed = false;
+
+      orders
+        .filter(o => o.category === 'PROGRAMADA' && o.deliveryDatetime)
+        .forEach(order => {
+          const t = new Date(order.deliveryDatetime).getTime();
+          const diff = t - now;
+          const hora = new Date(t).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+          const client = (order.client || 'Cliente').toUpperCase();
+
+          if (diff <= 0 && diff > -5 * 60 * 1000) {
+            const key = `${order.id}_due`;
+            if (!notified.has(key)) {
+              notified.add(key); changed = true;
+              newAlerts.push({ id: key, client, message: `HORA DE ENTREGA · ${hora}` });
+              if (typeof Notification !== 'undefined' && Notification.permission === 'granted')
+                new Notification(`⏰ ${client}`, { body: `Ha llegado la hora de entrega (${hora})`, tag: key });
+            }
+          } else if (diff > 0 && diff <= 30 * 60 * 1000) {
+            const key = `${order.id}_30min`;
+            if (!notified.has(key)) {
+              notified.add(key); changed = true;
+              newAlerts.push({ id: key, client, message: `ENTREGA EN 30 MIN · ${hora}` });
+              if (typeof Notification !== 'undefined' && Notification.permission === 'granted')
+                new Notification(`🔔 ${client}`, { body: `Entrega en 30 minutos (${hora})`, tag: key });
+            }
+          }
+        });
+
+      if (changed) saveNotified(notified);
+      if (newAlerts.length > 0) setDeliveryAlerts(prev => [...prev, ...newAlerts]);
+    };
+
+    if (typeof Notification !== 'undefined' && Notification.permission === 'default')
+      Notification.requestPermission();
+
+    checkDeliveries();
+    const interval = setInterval(checkDeliveries, 60 * 1000);
+    return () => clearInterval(interval);
+  }, [orders, session]);
+
   const handleDelete = async (id: string) => {
     await supabase.from('unico_orders').delete().eq('id', id);
     await supabase.from('unico_materials').delete().eq('id', id);
+    if (isAPK) {
+      const bridge = (window as any).AndroidBridge;
+      bridge?.cancelNotification?.(`${id}_due`);
+      bridge?.cancelNotification?.(`${id}_30min`);
+    }
     loadData();
   };
 
@@ -70,6 +193,24 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-950">
+      {/* Banner de notificación de entrega */}
+      {deliveryAlerts.length > 0 && session && (
+        <div className="fixed top-0 left-0 right-0 z-[200] bg-red-600 shadow-2xl">
+          <div className="max-w-xl mx-auto px-4 py-3 flex items-center gap-3">
+            <Bell size={18} className="text-white shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="font-black uppercase text-white text-sm leading-none truncate">{deliveryAlerts[0].client}</p>
+              <p className="text-[10px] font-bold text-white/90 uppercase mt-0.5">{deliveryAlerts[0].message}</p>
+            </div>
+            <button
+              onClick={() => setDeliveryAlerts(prev => prev.slice(1))}
+              className="p-1.5 bg-white/20 rounded-lg active:scale-90 transition-all shrink-0"
+            >
+              <X size={15} className="text-white" />
+            </button>
+          </div>
+        </div>
+      )}
       {!session ? <LoginScreen /> : (
         <Routes>
           <Route path="/" element={<Navigate to="/menu" replace />} />

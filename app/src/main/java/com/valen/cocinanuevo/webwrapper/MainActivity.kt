@@ -26,6 +26,7 @@ import androidx.core.content.FileProvider
 import java.io.File
 import java.io.FileOutputStream
 import java.util.*
+import com.valen.cocinanuevo.webwrapper.NotificationScheduler
 
 class MainActivity : AppCompatActivity() {
 
@@ -135,6 +136,9 @@ class MainActivity : AppCompatActivity() {
             permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
             permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+        }
         val needed = permissions.filter { ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED }
         if (needed.isNotEmpty()) ActivityCompat.requestPermissions(this, needed.toTypedArray(), 100)
     }
@@ -164,6 +168,35 @@ class MainActivity : AppCompatActivity() {
                     null, htmlContent, "text/html", "UTF-8", null
                 )
             }
+        }
+
+        /**
+         * Programa una notificación nativa de Android.
+         * Se dispara aunque la app esté cerrada o la pantalla bloqueada.
+         * @param orderId   ID único del pedido (se usa como clave)
+         * @param title     Título de la notificación
+         * @param body      Cuerpo del mensaje
+         * @param triggerAtMs  Timestamp en milisegundos (Unix epoch) en que debe dispararse
+         */
+        @JavascriptInterface
+        fun scheduleNotification(orderId: String, title: String, body: String, triggerAtMs: String) {
+            val triggerAt = triggerAtMs.toLongOrNull() ?: return
+            if (triggerAt <= System.currentTimeMillis()) return
+            NotificationScheduler.scheduleNotification(
+                this@MainActivity,
+                orderId,
+                title,
+                body,
+                triggerAt
+            )
+        }
+
+        /**
+         * Cancela una notificación programada (p.ej. si se borra o cambia el pedido).
+         */
+        @JavascriptInterface
+        fun cancelNotification(orderId: String) {
+            NotificationScheduler.cancelNotification(this@MainActivity, orderId)
         }
     }
 }
