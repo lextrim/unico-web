@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -E \"\\\\.\\(jsx|tsx|ts|js|vue\\)$\")",
+      "Bash(grep:*)",
+      "Bash(printf \"=== FILE 1 ===\\\\n\")",
+      "Bash(printf \"\\\\n=== FILE 2 ===\\\\n\")",
+      "Bash(git ls-tree:*)",
+      "Bash(git worktree:*)",
+      "Bash(git checkout:*)",
+      "Bash(git stash:*)",
+      "Bash(mv /c/UnicoWeb/.claude /c/UnicoWeb/.claude_backup)",
+      "Bash(mv /c/UnicoWeb/.claude_backup /c/UnicoWeb/.claude)"
+    ]
+  }
+}
