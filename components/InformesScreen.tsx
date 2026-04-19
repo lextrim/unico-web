@@ -1,13 +1,16 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Search, Calendar, MapPin, FileText, X, ChevronRight, Clock, Printer, Loader2 } from 'lucide-react';
 import { supabase } from '../supabase';
 
-const getBadgeClass = (isActive: boolean) =>
+const BADGE_COLORS = {
+  cascos:    { on: 'text-blue-400 bg-blue-500/10 border-blue-500/20',         off: 'text-slate-600 bg-slate-800/50 border-slate-700' },
+  puertas:   { on: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', off: 'text-slate-600 bg-slate-800/50 border-slate-700' },
+  tiradores: { on: 'text-amber-400 bg-amber-500/10 border-amber-500/20',       off: 'text-slate-600 bg-slate-800/50 border-slate-700' },
+};
+const getBadgeClass = (isActive: boolean, type: keyof typeof BADGE_COLORS) =>
   `w-9 h-5 flex items-center justify-center text-[8px] font-black tracking-tighter rounded border shrink-0 ${
-    isActive
-      ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
-      : 'text-slate-600 bg-slate-800/50 border-slate-700'
+    isActive ? BADGE_COLORS[type].on : BADGE_COLORS[type].off
   } uppercase`;
 
 const STATUS_COLORS: Record<string, string> = {
@@ -73,6 +76,8 @@ const InformesScreen: React.FC<{ isAdmin: boolean; isAPK: boolean }> = ({ isAdmi
   const [dateTo, setDateTo]             = useState('');
   const [traceRecord, setTraceRecord]   = useState<any | null>(null);
   const [traceRecords, setTraceRecords] = useState<any[]>([]);
+  const [page, setPage]                 = useState(1);
+  const PAGE_SIZE = 50;
   const openPrintWindow = (html: string) => {
     if (isAPK) {
       // Usa el bridge nativo Android para el diálogo de impresión real
@@ -117,6 +122,7 @@ const InformesScreen: React.FC<{ isAdmin: boolean; isAPK: boolean }> = ({ isAdmi
   };
 
   const filteredRecords = useMemo(() => {
+    setPage(1);
     return records.filter(r => {
       const matchSearch = (r.client || '').toLowerCase().includes(search.toLowerCase());
       const matchStatus = statusFilter === 'TODOS' || r.status === statusFilter;
@@ -125,6 +131,9 @@ const InformesScreen: React.FC<{ isAdmin: boolean; isAPK: boolean }> = ({ isAdmi
       return matchSearch && matchStatus && matchFrom && matchTo;
     });
   }, [records, search, statusFilter, dateFrom, dateTo]);
+
+  const totalPages = Math.ceil(filteredRecords.length / PAGE_SIZE);
+  const paginatedRecords = filteredRecords.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const handlePrintReport = async () => {
     if (filteredRecords.length === 0) return;
@@ -268,9 +277,9 @@ const InformesScreen: React.FC<{ isAdmin: boolean; isAPK: boolean }> = ({ isAdmi
                         )}
                         {(r.cascos !== undefined || r.puertas !== undefined || r.tiradores !== undefined) && (
                           <div className="flex gap-1">
-                            <span className={getBadgeClass(r.cascos)}>CA</span>
-                            <span className={getBadgeClass(r.puertas)}>PT</span>
-                            <span className={getBadgeClass(r.tiradores)}>TR</span>
+                            <span className={getBadgeClass(r.cascos, 'cascos')}>CA</span>
+                            <span className={getBadgeClass(r.puertas, 'puertas')}>PT</span>
+                            <span className={getBadgeClass(r.tiradores, 'tiradores')}>TR</span>
                           </div>
                         )}
                         {r.deliveryDatetime && (
@@ -374,6 +383,7 @@ const InformesScreen: React.FC<{ isAdmin: boolean; isAPK: boolean }> = ({ isAdmi
 
           <p className="text-[9px] text-slate-600 font-black uppercase text-right">
             {filteredRecords.length} registro{filteredRecords.length !== 1 ? 's' : ''}
+            {totalPages > 1 && ` · Página ${page}/${totalPages}`}
           </p>
         </div>
       </div>
@@ -385,7 +395,7 @@ const InformesScreen: React.FC<{ isAdmin: boolean; isAPK: boolean }> = ({ isAdmi
             <div className="text-center py-10 font-black text-slate-500 uppercase">Cargando...</div>
           ) : filteredRecords.length === 0 ? (
             <div className="text-center py-10 font-black text-slate-600 uppercase text-xs">Sin resultados</div>
-          ) : filteredRecords.map(r => (
+          ) : paginatedRecords.map(r => (
             <button
               key={r.id}
               onClick={() => openTrace(r)}
@@ -415,9 +425,9 @@ const InformesScreen: React.FC<{ isAdmin: boolean; isAPK: boolean }> = ({ isAdmi
 
               {(r.cascos !== undefined || r.puertas !== undefined || r.tiradores !== undefined) && (
                 <div className="flex gap-1.5">
-                  <span className={getBadgeClass(r.cascos)}>CA</span>
-                  <span className={getBadgeClass(r.puertas)}>PT</span>
-                  <span className={getBadgeClass(r.tiradores)}>TR</span>
+                  <span className={getBadgeClass(r.cascos, 'cascos')}>CA</span>
+                  <span className={getBadgeClass(r.puertas, 'puertas')}>PT</span>
+                  <span className={getBadgeClass(r.tiradores, 'tiradores')}>TR</span>
                 </div>
               )}
 
@@ -436,6 +446,28 @@ const InformesScreen: React.FC<{ isAdmin: boolean; isAPK: boolean }> = ({ isAdmi
               )}
             </button>
           ))}
+          {/* Paginación */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-3 pt-2 pb-4">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl text-[10px] font-black uppercase text-slate-400 disabled:opacity-30 active:scale-95 transition-all"
+              >
+                ANTERIOR
+              </button>
+              <span className="text-[10px] font-black text-slate-500 uppercase">
+                {page} / {totalPages}
+              </span>
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl text-[10px] font-black uppercase text-slate-400 disabled:opacity-30 active:scale-95 transition-all"
+              >
+                SIGUIENTE
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

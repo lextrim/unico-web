@@ -5,9 +5,14 @@ import { supabase } from "../supabase";
 import AppModal from "./AppModal";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
-const getBadgeClass = (isActive: boolean) =>
+const BADGE_COLORS = {
+  cascos:    { on: 'text-blue-400 bg-blue-500/10 border-blue-500/20',         off: 'text-slate-600 bg-slate-800/50 border-slate-700' },
+  puertas:   { on: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', off: 'text-slate-600 bg-slate-800/50 border-slate-700' },
+  tiradores: { on: 'text-amber-400 bg-amber-500/10 border-amber-500/20',       off: 'text-slate-600 bg-slate-800/50 border-slate-700' },
+};
+const getBadgeClass = (isActive: boolean, type: keyof typeof BADGE_COLORS) =>
   `w-10 h-6 flex items-center justify-center text-[9px] font-black tracking-tighter rounded-md border transition-all shrink-0 ${
-    isActive ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" : "text-white bg-slate-800/50 border-slate-700"
+    isActive ? BADGE_COLORS[type].on : BADGE_COLORS[type].off
   } uppercase`;
 
 const compressImage = (file: File): Promise<File> => {
@@ -50,6 +55,7 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
   const [tiradores, setTiradores] = useState(false);
   const [notes, setNotes] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [listLoading, setListLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [fullscreenImg, setFullscreenImg] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -63,8 +69,11 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
     setModal({ title, message, icon: <Trash2 size={28} className="text-white" />, iconBg: 'bg-red-600', confirmText: 'BORRAR', confirmClass: 'bg-red-600', onConfirm: () => { setModal(null); onConfirm(); }, onCancel: () => setModal(null) });
 
   const fetchMaterials = async () => {
-    const { data } = await supabase.from('unico_materials').select('*').order('created_at', { ascending: false });
-    if (data) setRecords(data.map((m: any) => ({ id: m.id, ...m.payload, server_created_at: m.created_at })));
+    setListLoading(true);
+    try {
+      const { data } = await supabase.from('unico_materials').select('*').order('created_at', { ascending: false });
+      if (data) setRecords(data.map((m: any) => ({ id: m.id, ...m.payload, server_created_at: m.created_at })));
+    } finally { setListLoading(false); }
   };
 
   useEffect(() => { fetchMaterials(); }, []);
@@ -80,7 +89,7 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
     const clientUpper = client.toUpperCase().trim();
     if (!editingId) {
       const dup = records.find(r => r.client?.toUpperCase().trim() === clientUpper);
-      if (dup) { showAlert("Cliente duplicado", `Ya existe un registro con el cliente "${clientUpper}"`); return; }
+      if (dup) { showAlert("Cliente duplicado", `"${clientUpper}" ya está en la lista de Materiales`); return; }
     }
     setIsUploading(true);
     try {
@@ -303,7 +312,18 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
 
         {/* Lista de registros */}
         <div className="max-w-xl mx-auto px-5 py-6 space-y-3 pb-40">
-          {filtered.map(r => (
+          {listLoading ? (
+            <div className="text-center py-10">
+              <Loader2 className="animate-spin mx-auto text-slate-600" size={24} />
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="text-center py-10">
+              <p className="text-slate-600 font-black uppercase text-xs tracking-widest">
+                {search ? 'Sin resultados' : 'Sin registros'}
+              </p>
+            </div>
+          ) : null}
+          {!listLoading && filtered.map(r => (
             <div key={r.id} ref={el => { if (el) itemRefs.current.set(r.id, el); else itemRefs.current.delete(r.id); }} className="bg-slate-900 border border-slate-800 rounded-2xl p-3 flex items-start gap-4 shadow-sm">
               {/* Imagen */}
               <div className="shrink-0 mt-1" onClick={() => r.image_url && setFullscreenImg(r.image_url)}>
@@ -315,16 +335,16 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
 
               {/* Info */}
               <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-black uppercase truncate text-white">{r.client}</h3>
+                <h3 className="text-base font-black uppercase truncate text-white leading-tight">{r.client}</h3>
                 {r.ubicado && (
                   <p className="text-[10px] text-slate-500 uppercase mt-1 truncate">
                     <MapPin size={10} className="inline mr-1" />{r.ubicado}
                   </p>
                 )}
                 <div className="flex gap-1.5 mt-2">
-                  <span className={getBadgeClass(r.cascos)}>CA</span>
-                  <span className={getBadgeClass(r.puertas)}>PT</span>
-                  <span className={getBadgeClass(r.tiradores)}>TR</span>
+                  <span className={getBadgeClass(r.cascos, 'cascos')}>CA</span>
+                  <span className={getBadgeClass(r.puertas, 'puertas')}>PT</span>
+                  <span className={getBadgeClass(r.tiradores, 'tiradores')}>TR</span>
                 </div>
                 {/* ✅ FIX: Mostrar notas en la tarjeta si existen */}
                 {r.notes && (

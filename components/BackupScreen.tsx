@@ -37,11 +37,23 @@ const BackupScreen = () => {
     reader.onload = async (ev) => {
       try {
         const json = JSON.parse(ev.target?.result as string);
-        if (json.materials?.length > 0) await supabase.from('unico_materials').upsert(json.materials);
-        if (json.orders?.length > 0) await supabase.from('unico_orders').upsert(json.orders);
-        setStatus({ type: 'success', msg: 'DATOS RESTAURADOS' });
-      } catch (err: any) { setStatus({ type: 'error', msg: 'ERROR' }); }
-      finally { setLoading(false); }
+        // Validar estructura del backup
+        if (typeof json !== 'object' || json === null || (!Array.isArray(json.materials) && !Array.isArray(json.orders))) {
+          setStatus({ type: 'error', msg: 'ARCHIVO NO VÁLIDO — No es un backup de ÚNICO' });
+          return;
+        }
+        const mats = Array.isArray(json.materials) ? json.materials : [];
+        const ords = Array.isArray(json.orders) ? json.orders : [];
+        if (mats.length === 0 && ords.length === 0) {
+          setStatus({ type: 'error', msg: 'EL ARCHIVO ESTÁ VACÍO' });
+          return;
+        }
+        if (mats.length > 0) await supabase.from('unico_materials').upsert(mats);
+        if (ords.length > 0) await supabase.from('unico_orders').upsert(ords);
+        setStatus({ type: 'success', msg: `RESTAURADOS: ${mats.length} MATERIALES · ${ords.length} PEDIDOS` });
+      } catch (err: any) {
+        setStatus({ type: 'error', msg: 'ERROR AL LEER EL ARCHIVO' });
+      } finally { setLoading(false); }
     };
     reader.readAsText(pendingFile);
   };

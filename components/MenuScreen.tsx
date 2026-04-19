@@ -31,7 +31,7 @@ const MenuScreen: React.FC<{ isAdmin: boolean, isViewer: boolean, isAPK: boolean
             <button
               key={i.label}
               onClick={() => navigate(i.path)}
-              className={`${i.color} p-5 rounded-3xl flex flex-col items-center justify-center gap-3 shadow-xl active:scale-95 transition-all`}
+              className={`${i.color} p-5 sm:py-8 rounded-3xl flex flex-col items-center justify-center gap-3 shadow-xl active:scale-95 transition-all`}
             >
               <i.icon size={32} className="text-white" />
               <span className="text-white font-black uppercase text-[10px] tracking-widest">{i.label}</span>

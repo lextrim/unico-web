@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { supabase } from './supabase';
 import { Session } from '@supabase/supabase-js';
@@ -23,8 +23,11 @@ const App: React.FC = () => {
   const isAPK = /wv|android|iphone/i.test(navigator.userAgent) && !/chrome|safari/i.test(navigator.userAgent) || /wv/i.test(navigator.userAgent);
   const isAdmin = userRole === 'admin';
   const isViewer = userRole === 'viewer';
+  const loadInFlight = useRef(false);
 
   const loadData = async () => {
+    if (loadInFlight.current) return;
+    loadInFlight.current = true;
     try {
       const { data: { session: cur } } = await supabase.auth.getSession();
 
@@ -64,7 +67,7 @@ const App: React.FC = () => {
         setUserRole(null);
       }
     } catch (e) { console.error(e); }
-    finally { setLoading(false); }
+    finally { setLoading(false); loadInFlight.current = false; }
   };
 
   // Carga inicial y detecta cambios de sesión (login/logout)
@@ -136,6 +139,17 @@ const App: React.FC = () => {
     const checkDeliveries = () => {
       const now = Date.now();
       const notified = getNotified();
+
+      // ✅ Limpia IDs de órdenes eliminadas o que ya no están en PROGRAMADA
+      const activeKeys = new Set(
+        orders
+          .filter(o => o.category === 'PROGRAMADA' && o.deliveryDatetime)
+          .flatMap(o => [`${o.id}_due`, `${o.id}_30min`])
+      );
+      const pruned = new Set([...notified].filter(k => activeKeys.has(k)));
+      if (pruned.size !== notified.size) saveNotified(pruned);
+      const notifiedClean = pruned;
+
       const newAlerts: Array<{ id: string; client: string; message: string }> = [];
       let changed = false;
 
@@ -149,16 +163,16 @@ const App: React.FC = () => {
 
           if (diff <= 0 && diff > -5 * 60 * 1000) {
             const key = `${order.id}_due`;
-            if (!notified.has(key)) {
-              notified.add(key); changed = true;
+            if (!notifiedClean.has(key)) {
+              notifiedClean.add(key); changed = true;
               newAlerts.push({ id: key, client, message: `HORA DE ENTREGA · ${hora}` });
               if (typeof Notification !== 'undefined' && Notification.permission === 'granted')
                 new Notification(`⏰ ${client}`, { body: `Ha llegado la hora de entrega (${hora})`, tag: key });
             }
           } else if (diff > 0 && diff <= 30 * 60 * 1000) {
             const key = `${order.id}_30min`;
-            if (!notified.has(key)) {
-              notified.add(key); changed = true;
+            if (!notifiedClean.has(key)) {
+              notifiedClean.add(key); changed = true;
               newAlerts.push({ id: key, client, message: `ENTREGA EN 30 MIN · ${hora}` });
               if (typeof Notification !== 'undefined' && Notification.permission === 'granted')
                 new Notification(`🔔 ${client}`, { body: `Entrega en 30 minutos (${hora})`, tag: key });
@@ -166,7 +180,7 @@ const App: React.FC = () => {
           }
         });
 
-      if (changed) saveNotified(notified);
+      if (changed) saveNotified(notifiedClean);
       if (newAlerts.length > 0) setDeliveryAlerts(prev => [...prev, ...newAlerts]);
     };
 

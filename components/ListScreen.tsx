@@ -16,10 +16,26 @@ const colors: Record<string, string> = {
 // ✅ Solo MATERIALES muestra badges CA/PT/TR
 const CATEGORIES_WITH_BADGES = ['MATERIALES'];
 
-const getBadgeClass = (isActive: boolean) =>
+const BADGE_COLORS = {
+  cascos:    { on: 'text-blue-400 bg-blue-500/10 border-blue-500/20',         off: 'text-slate-600 bg-slate-800/50 border-slate-700' },
+  puertas:   { on: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', off: 'text-slate-600 bg-slate-800/50 border-slate-700' },
+  tiradores: { on: 'text-amber-400 bg-amber-500/10 border-amber-500/20',       off: 'text-slate-600 bg-slate-800/50 border-slate-700' },
+};
+const getBadgeClass = (isActive: boolean, type: keyof typeof BADGE_COLORS) =>
   `w-10 h-6 flex items-center justify-center text-[9px] font-black tracking-tighter rounded-md border transition-all shrink-0 ${
-    isActive ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" : "text-white bg-slate-800/50 border-slate-700"
+    isActive ? BADGE_COLORS[type].on : BADGE_COLORS[type].off
   } uppercase`;
+
+// Etiqueta de urgencia para mostrar junto a la hora de entrega
+const getUrgencyLabel = (dt: string): string | null => {
+  const diff = new Date(dt).getTime() - Date.now();
+  if (diff < 0) return 'VENCIDA';
+  const mins = Math.round(diff / 60000);
+  if (mins < 60) return `EN ${mins}MIN`;
+  const hours = Math.round(diff / 3600000);
+  if (hours < 4) return `EN ${hours}H`;
+  return null;
+};
 
 // Formatea fecha/hora de entrega
 const formatDelivery = (dt: string) => {
@@ -192,6 +208,13 @@ const ListScreen: React.FC<{ orders: any[], onDelete: (id: string) => void, isAd
       {/* Lista */}
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto no-scrollbar">
         <div className="max-w-xl mx-auto px-5 py-5 space-y-4 pb-32">
+          {filteredData.length === 0 && (
+            <div className="text-center py-16">
+              <p className="text-slate-600 font-black uppercase text-xs tracking-widest">
+                {search ? 'Sin resultados' : 'Sin registros'}
+              </p>
+            </div>
+          )}
           {filteredData.map(o => {
             const delivery = o.deliveryDatetime ? formatDelivery(o.deliveryDatetime) : null;
             const style = o.deliveryDatetime ? getDeliveryStyle(o.deliveryDatetime) : null;
@@ -206,12 +229,15 @@ const ListScreen: React.FC<{ orders: any[], onDelete: (id: string) => void, isAd
                 {/* ✅ Banner de fecha/hora destacado en tarjetas de ENTREGAS */}
                 {isEntregas && delivery && style && (
                   <div className={`flex items-center gap-2 px-4 py-2 border-b border-slate-800/50 ${style.bg}`}>
-                    <CalendarClock size={13} className={style.text} />
-                    <span className={`text-[11px] font-black uppercase tracking-wider ${style.text}`}>
+                    <CalendarClock size={13} className={`${style.text} shrink-0`} />
+                    <span className={`text-[11px] font-black uppercase tracking-wider ${style.text} flex-1`}>
                       {delivery.label}
+                      {delivery.sub && <span className={`ml-1.5 text-[10px] font-bold opacity-70`}>{delivery.sub}</span>}
                     </span>
-                    {delivery.sub && (
-                      <span className={`text-[10px] font-bold ${style.text} opacity-70`}>{delivery.sub}</span>
+                    {o.deliveryDatetime && getUrgencyLabel(o.deliveryDatetime) && (
+                      <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border border-current ${style.text} bg-white/10`}>
+                        {getUrgencyLabel(o.deliveryDatetime)}
+                      </span>
                     )}
                   </div>
                 )}
@@ -235,7 +261,7 @@ const ListScreen: React.FC<{ orders: any[], onDelete: (id: string) => void, isAd
 
                   {/* Contenido */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-black text-white uppercase truncate">{o.client}</h3>
+                    <h3 className="text-base font-black text-white uppercase truncate leading-tight">{o.client}</h3>
 
                     {o.ubicado && (
                       <p className="text-[10px] text-slate-500 uppercase mt-1 truncate">
@@ -246,9 +272,9 @@ const ListScreen: React.FC<{ orders: any[], onDelete: (id: string) => void, isAd
                     {/* Badges CA/PT/TR — solo en MATERIALES */}
                     {showBadges && (
                       <div className="flex gap-1.5 mt-2">
-                        <span className={getBadgeClass(o.cascos)}>CA</span>
-                        <span className={getBadgeClass(o.puertas)}>PT</span>
-                        <span className={getBadgeClass(o.tiradores)}>TR</span>
+                        <span className={getBadgeClass(o.cascos, 'cascos')}>CA</span>
+                        <span className={getBadgeClass(o.puertas, 'puertas')}>PT</span>
+                        <span className={getBadgeClass(o.tiradores, 'tiradores')}>TR</span>
                       </div>
                     )}
 
