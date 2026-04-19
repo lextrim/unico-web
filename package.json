@@ -11,7 +11,7 @@
     "copy-dist": "shx rm -rf app/src/main/assets/web && shx mkdir -p app/src/main/assets/web && shx cp -r dist/* app/src/main/assets/web",
     "predeploy": "pnpm build",
     "deploy": "gh-pages -d dist",
-    "backup": "git add . && git commit -m \"Backup de seguridad automatico\" && git push origin master:main --force"
+    "backup": "git add . && git commit -m \"Backup de seguridad automatico\" && git push origin main:main --force"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.98.0",
