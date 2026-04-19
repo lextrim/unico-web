@@ -119,13 +119,7 @@
       const { data, error } = await client.auth.getSession();
       if (error) throw error;
 
-      if (!data || !data.session) {
-        const res = await client.auth.signInAnonymously();
-        if (res && res.error) throw res.error;
-      }
-
-      const { data: data2 } = await client.auth.getSession();
-      const token = data2 && data2.session ? data2.session.access_token : null;
+      const token = data && data.session ? data.session.access_token : null;
       if (token && client.realtime && typeof client.realtime.setAuth === "function") {
         client.realtime.setAuth(token);
       }
@@ -133,7 +127,7 @@
       client.auth.onAuthStateChange((_event, session) => {
         try {
           const t = session && session.access_token ? session.access_token : null;
-          if (t && client.realtime && typeof client.realtime.setAuth === "function") {
+          if (client.realtime && typeof client.realtime.setAuth === "function") {
             client.realtime.setAuth(t);
           }
         } catch (_) {}
