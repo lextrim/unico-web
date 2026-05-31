@@ -282,8 +282,8 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
 
             {/* Rack / Nivel */}
             <div className="grid grid-cols-2 gap-2">
-              <input type="number" inputMode="numeric" value={rack} onChange={e => setRack(e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-white font-black outline-none transition-all" placeholder="RACK" />
-              <input type="number" inputMode="numeric" value={nivel} onChange={e => setNivel(e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-white font-black outline-none transition-all" placeholder="NIVEL" />
+              <input type="number" inputMode="numeric" value={rack} onChange={e => setRack(e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-white font-black outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" placeholder="RACK" />
+              <input type="number" inputMode="numeric" value={nivel} onChange={e => setNivel(e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-white font-black outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" placeholder="NIVEL" />
             </div>
 
             {/* ✅ FIX: Campo Notas — antes no existía en el JSX */}
