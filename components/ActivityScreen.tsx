@@ -53,17 +53,17 @@ const ActivityScreen: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col">
       {/* Header */}
-      <div className="bg-slate-900 border-b border-slate-800 px-4 py-4 flex items-center gap-3">
+      <div className="bg-slate-900 border-b border-slate-800 px-4 py-4 flex items-center">
         <button
           onClick={() => navigate('/menu')}
-          className="p-2 rounded-xl bg-slate-800 active:scale-90 transition-all"
+          className="p-2 rounded-xl bg-slate-800 active:scale-90 transition-all shrink-0"
         >
           <ArrowLeft size={20} className="text-white" />
         </button>
-        <h1 className="text-white font-black uppercase tracking-widest text-sm flex-1">Actividad de Usuarios</h1>
+        <h1 className="text-white font-black uppercase tracking-widest text-sm flex-1 text-center">Actividad de Usuarios</h1>
         <button
           onClick={fetchLogs}
-          className="p-2 rounded-xl bg-slate-800 active:scale-90 transition-all"
+          className="p-2 rounded-xl bg-slate-800 active:scale-90 transition-all shrink-0"
         >
           <RefreshCw size={18} className="text-slate-400" />
         </button>
