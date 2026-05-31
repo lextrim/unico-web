@@ -162,7 +162,8 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
   }, [records, search, filterCascos, filterPuertas]);
 
   useEffect(() => {
-    if (search.trim() === "") {
+    const hasFilter = search.trim() !== "" || filterCascos || filterPuertas;
+    if (!hasFilter) {
       scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     } else if (filtered.length > 0) {
       itemRefs.current.get(filtered[0].id)?.scrollIntoView({ behavior: "smooth", block: "center" });
