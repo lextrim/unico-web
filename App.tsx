@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { supabase } from './supabase';
+import { supabase, logActivity } from './supabase';
 import { Session } from '@supabase/supabase-js';
 import { Bell, X } from 'lucide-react';
 
@@ -11,6 +11,7 @@ import FormScreen from './components/FormScreen';
 import LoginScreen from './components/LoginScreen';
 import InformesScreen from './components/InformesScreen';
 import BackupScreen from './components/BackupScreen';
+import ActivityScreen from './components/ActivityScreen';
 
 const App: React.FC = () => {
   const [session, setSession] = useState<Session | null>(null);
@@ -24,6 +25,7 @@ const App: React.FC = () => {
   const isAdmin = userRole === 'admin';
   const isViewer = userRole === 'viewer';
   const loadInFlight = useRef(false);
+  const activeEmail = useRef<string | null>(null);
 
   const loadData = async () => {
     if (loadInFlight.current) return;
@@ -49,6 +51,7 @@ const App: React.FC = () => {
           return;
         }
 
+        activeEmail.current = cur.user.email ?? null;
         setSession(cur);
         setUserRole(role[0].role as 'admin' | 'viewer');
 
@@ -73,7 +76,13 @@ const App: React.FC = () => {
   // Carga inicial y detecta cambios de sesión (login/logout)
   useEffect(() => {
     loadData();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session?.user?.email) {
+        logActivity(session.user.email, 'login');
+      } else if (event === 'SIGNED_OUT' && activeEmail.current) {
+        logActivity(activeEmail.current, 'logout');
+        activeEmail.current = null;
+      }
       loadData();
     });
     return () => subscription.unsubscribe();
@@ -235,6 +244,7 @@ const App: React.FC = () => {
           <Route path="/form/:category/:id" element={isAdmin ? <FormScreen /> : <Navigate to="/menu" />} />
           <Route path="/informes" element={(isAdmin || isViewer) ? <InformesScreen isAdmin={isAdmin || isViewer} isAPK={isAPK} /> : <Navigate to="/menu" />} />
           <Route path="/backup" element={isAdmin ? <BackupScreen /> : <Navigate to="/menu" />} />
+          <Route path="/activity" element={isAdmin ? <ActivityScreen /> : <Navigate to="/menu" />} />
         </Routes>
       )}
     </div>

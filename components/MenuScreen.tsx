@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Package, Hammer, CheckCircle, Truck, AlertTriangle, FileText, ShieldCheck, LogOut } from 'lucide-react';
+import { Package, Hammer, CheckCircle, Truck, AlertTriangle, FileText, ShieldCheck, Activity, LogOut } from 'lucide-react';
 import { supabase } from '../supabase';
 
 const MenuScreen: React.FC<{ isAdmin: boolean, isViewer: boolean, isAPK: boolean }> = ({ isAdmin, isViewer, isAPK }) => {
@@ -40,13 +40,20 @@ const MenuScreen: React.FC<{ isAdmin: boolean, isViewer: boolean, isAPK: boolean
         </div>
 
         {isAdmin && (
-          <div className="w-full">
+          <div className="w-full flex gap-3">
             <button
               onClick={() => navigate('/backup')}
-              className="w-full bg-slate-900 p-5 rounded-3xl flex flex-row items-center justify-center gap-3 shadow-xl active:scale-95 border border-slate-800"
+              className="flex-1 bg-slate-900 p-5 rounded-3xl flex flex-row items-center justify-center gap-3 shadow-xl active:scale-95 border border-slate-800"
             >
               <div className="text-blue-500"><ShieldCheck size={24} /></div>
               <span className="text-white font-black uppercase text-xs tracking-widest leading-none">Seguridad</span>
+            </button>
+            <button
+              onClick={() => navigate('/activity')}
+              className="flex-1 bg-slate-900 p-5 rounded-3xl flex flex-row items-center justify-center gap-3 shadow-xl active:scale-95 border border-slate-800"
+            >
+              <div className="text-violet-500"><Activity size={24} /></div>
+              <span className="text-white font-black uppercase text-xs tracking-widest leading-none">Actividad</span>
             </button>
           </div>
         )}
