@@ -105,7 +105,8 @@ const ListScreen: React.FC<{ orders: any[], onDelete: (id: string) => void, isAd
   const filteredData = useMemo(() => {
     const q = search.toUpperCase().trim();
     const filtered = q ? data.filter(o => o.client?.toUpperCase().includes(q)) : data;
-    // En ENTREGAS: ordenar por proximidad de entrega, sin fecha al final
+
+    // ENTREGAS: por fecha de entrega más próxima, sin fecha al final
     if (isEntregas) {
       return [...filtered].sort((a, b) => {
         if (!a.deliveryDatetime && !b.deliveryDatetime) return 0;
@@ -114,8 +115,19 @@ const ListScreen: React.FC<{ orders: any[], onDelete: (id: string) => void, isAd
         return new Date(a.deliveryDatetime).getTime() - new Date(b.deliveryDatetime).getTime();
       });
     }
-    return filtered;
-  }, [data, search, isEntregas]);
+
+    // MATERIAL: más reciente primero
+    if (currentCat === 'MATERIALES') {
+      return [...filtered].sort((a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    }
+
+    // ARMANDOSE, TERMINADA, TERMINACIONES: más antiguo primero (mayor prioridad)
+    return [...filtered].sort((a, b) =>
+      new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    );
+  }, [data, search, isEntregas, currentCat]);
 
   return (
     <div className="flex flex-col h-screen bg-slate-950 overflow-hidden relative">
