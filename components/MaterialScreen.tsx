@@ -276,7 +276,7 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
               onChange={e => setEstado(e.target.value)}
               className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-white font-black uppercase outline-none transition-all"
             >
-              <option value="">QUEDARSE EN MATERIAL</option>
+              <option value="">MATERIAL</option>
               <option value="ARMANDOSE">ARMÁNDOSE</option>
               <option value="TERMINADA">TERMINADA</option>
               <option value="PROGRAMADA">ENTREGAS</option>
