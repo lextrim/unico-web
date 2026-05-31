@@ -53,6 +53,8 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
   const [cascos, setCascos] = useState(false);
   const [puertas, setPuertas] = useState(false);
   const [tiradores, setTiradores] = useState(false);
+  const [filterCascos, setFilterCascos] = useState(false);
+  const [filterPuertas, setFilterPuertas] = useState(false);
   const [notes, setNotes] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [listLoading, setListLoading] = useState(true);
@@ -151,8 +153,13 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
 
   const filtered = useMemo(() => {
     const q = search.toUpperCase().trim();
-    return records.filter(r => r.client?.toUpperCase().includes(q) || r.ubicado?.toUpperCase().includes(q));
-  }, [records, search]);
+    return records.filter(r => {
+      if (q && !r.client?.toUpperCase().includes(q) && !r.ubicado?.toUpperCase().includes(q)) return false;
+      if (filterCascos && !r.cascos) return false;
+      if (filterPuertas && !r.puertas) return false;
+      return true;
+    });
+  }, [records, search, filterCascos, filterPuertas]);
 
   useEffect(() => {
     if (search.trim() === "") {
@@ -200,17 +207,33 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
 
       {/* Buscador */}
       <div className="bg-slate-950/95 backdrop-blur-md p-3 border-b border-slate-900 sticky top-[60px] z-20">
-        <div className="max-w-xl mx-auto px-2 flex gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-800 p-3 pl-10 rounded-xl text-white font-black uppercase text-xs outline-none focus:border-blue-500 transition-all"
-              placeholder="BUSCAR CLIENTE..."
-            />
+        <div className="max-w-xl mx-auto px-2 space-y-2">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+              <input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-800 p-3 pl-10 rounded-xl text-white font-black uppercase text-xs outline-none focus:border-blue-500 transition-all"
+                placeholder="BUSCAR CLIENTE..."
+              />
+            </div>
+            <button onClick={() => { setSearch(""); setFilterCascos(false); setFilterPuertas(false); }} className="bg-red-900/20 px-4 rounded-xl text-red-500 font-black text-[10px] uppercase active:scale-90 transition-all">LIMPIAR</button>
           </div>
-          <button onClick={() => setSearch("")} className="bg-red-900/20 px-4 rounded-xl text-red-500 font-black text-[10px] uppercase active:scale-90 transition-all">LIMPIAR</button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setFilterCascos(v => !v)}
+              className={`flex-1 py-2 rounded-xl font-black text-[10px] uppercase border transition-all active:scale-95 ${filterCascos ? BADGE_COLORS.cascos.on + ' border-blue-500/40' : 'bg-slate-900 border-slate-800 text-slate-500'}`}
+            >
+              CASCOS
+            </button>
+            <button
+              onClick={() => setFilterPuertas(v => !v)}
+              className={`flex-1 py-2 rounded-xl font-black text-[10px] uppercase border transition-all active:scale-95 ${filterPuertas ? BADGE_COLORS.puertas.on + ' border-emerald-500/40' : 'bg-slate-900 border-slate-800 text-slate-500'}`}
+            >
+              PUERTAS
+            </button>
+          </div>
         </div>
       </div>
 
