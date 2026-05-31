@@ -2,16 +2,7 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Search, Calendar, MapPin, FileText, X, ChevronRight, Clock, Printer, Loader2 } from 'lucide-react';
 import { supabase } from '../supabase';
-
-const BADGE_COLORS = {
-  cascos:    { on: 'text-blue-400 bg-blue-500/10 border-blue-500/20',         off: 'text-slate-600 bg-slate-800/50 border-slate-700' },
-  puertas:   { on: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', off: 'text-slate-600 bg-slate-800/50 border-slate-700' },
-  tiradores: { on: 'text-amber-400 bg-amber-500/10 border-amber-500/20',       off: 'text-slate-600 bg-slate-800/50 border-slate-700' },
-};
-const getBadgeClass = (isActive: boolean, type: keyof typeof BADGE_COLORS) =>
-  `w-9 h-5 flex items-center justify-center text-[8px] font-black tracking-tighter rounded border shrink-0 ${
-    isActive ? BADGE_COLORS[type].on : BADGE_COLORS[type].off
-  } uppercase`;
+import { getBadgeClass } from '../utils/badges';
 
 const STATUS_COLORS: Record<string, string> = {
   MATERIALES:    'bg-blue-500/20 text-blue-400 border-blue-500/30',
@@ -277,9 +268,9 @@ const InformesScreen: React.FC<{ isAdmin: boolean; isAPK: boolean }> = ({ isAdmi
                         )}
                         {(r.cascos !== undefined || r.puertas !== undefined || r.tiradores !== undefined) && (
                           <div className="flex gap-1">
-                            <span className={getBadgeClass(r.cascos, 'cascos')}>CA</span>
-                            <span className={getBadgeClass(r.puertas, 'puertas')}>PT</span>
-                            <span className={getBadgeClass(r.tiradores, 'tiradores')}>TR</span>
+                            <span className={getBadgeClass(r.cascos, 'cascos', 'sm')}>CA</span>
+                            <span className={getBadgeClass(r.puertas, 'puertas', 'sm')}>PT</span>
+                            <span className={getBadgeClass(r.tiradores, 'tiradores', 'sm')}>TR</span>
                           </div>
                         )}
                         {r.deliveryDatetime && (
@@ -425,9 +416,9 @@ const InformesScreen: React.FC<{ isAdmin: boolean; isAPK: boolean }> = ({ isAdmi
 
               {(r.cascos !== undefined || r.puertas !== undefined || r.tiradores !== undefined) && (
                 <div className="flex gap-1.5">
-                  <span className={getBadgeClass(r.cascos, 'cascos')}>CA</span>
-                  <span className={getBadgeClass(r.puertas, 'puertas')}>PT</span>
-                  <span className={getBadgeClass(r.tiradores, 'tiradores')}>TR</span>
+                  <span className={getBadgeClass(r.cascos, 'cascos', 'sm')}>CA</span>
+                  <span className={getBadgeClass(r.puertas, 'puertas', 'sm')}>PT</span>
+                  <span className={getBadgeClass(r.tiradores, 'tiradores', 'sm')}>TR</span>
                 </div>
               )}
 

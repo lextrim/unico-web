@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { getIsAPK } from './utils/platform';
 
 // Reemplaza con tus datos de Supabase (Project Settings > API)
 const supabaseUrl = 'https://qsdxnwpgyvhttceizica.supabase.co';
@@ -11,7 +12,7 @@ export async function logActivity(
   event: 'login' | 'logout',
   details?: Record<string, unknown>
 ) {
-  const isAPK = /wv/i.test(navigator.userAgent);
+  const isAPK = getIsAPK();
   const { error } = await supabase.from('unico_activity_log').insert({
     user_email: userEmail,
     event,

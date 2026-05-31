@@ -5,6 +5,7 @@ import { supabase } from '../supabase';
 import AppModal from './AppModal';
 import DeliveryModal from './DeliveryModal';
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+import { getBadgeClass } from '../utils/badges';
 
 const colors: Record<string, string> = {
   'ARMANDOSE': 'bg-orange-600',
@@ -13,18 +14,7 @@ const colors: Record<string, string> = {
   'TERMINACIONES': 'bg-red-600'
 };
 
-// ✅ Solo MATERIALES muestra badges CA/PT/TR
 const CATEGORIES_WITH_BADGES = ['MATERIALES'];
-
-const BADGE_COLORS = {
-  cascos:    { on: 'text-blue-400 bg-blue-500/10 border-blue-500/20',         off: 'text-slate-600 bg-slate-800/50 border-slate-700' },
-  puertas:   { on: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', off: 'text-slate-600 bg-slate-800/50 border-slate-700' },
-  tiradores: { on: 'text-amber-400 bg-amber-500/10 border-amber-500/20',       off: 'text-slate-600 bg-slate-800/50 border-slate-700' },
-};
-const getBadgeClass = (isActive: boolean, type: keyof typeof BADGE_COLORS) =>
-  `w-10 h-6 flex items-center justify-center text-[9px] font-black tracking-tighter rounded-md border transition-all shrink-0 ${
-    isActive ? BADGE_COLORS[type].on : BADGE_COLORS[type].off
-  } uppercase`;
 
 // Etiqueta de urgencia para mostrar junto a la hora de entrega
 const getUrgencyLabel = (dt: string): string | null => {

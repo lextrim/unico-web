@@ -1,32 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ChevronLeft, Save, Image as ImageIcon, Loader2, Clock, AlertTriangle, AlertCircle } from 'lucide-react';
 import { supabase } from '../supabase';
 import AppModal from './AppModal';
 import DeliveryModal from './DeliveryModal';
-
-const compressImage = (file: File): Promise<File> =>
-  new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (e) => {
-      const img = new Image();
-      img.src = e.target?.result as string;
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX = 1600;
-        let w = img.width, h = img.height;
-        if (w > h && w > MAX) { h *= MAX / w; w = MAX; }
-        else if (h > MAX) { w *= MAX / h; h = MAX; }
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d')?.drawImage(img, 0, 0, w, h);
-        canvas.toBlob(
-          (blob) => resolve(blob ? new File([blob], file.name, { type: 'image/jpeg' }) : file),
-          'image/jpeg', 0.85
-        );
-      };
-    };
-  });
+import { compressImage, createBlobUrl } from '../utils/imageUtils';
 
 const NEXT_OPTIONS: Record<string, { value: string; label: string }[]> = {
   ARMANDOSE:    [{ value: 'ARMANDOSE', label: 'ARMÁNDOSE' }, { value: 'TERMINADA', label: 'TERMINADA' }, { value: 'PROGRAMADA', label: 'ENTREGAS' }, { value: 'TERMINACIONES', label: 'TERMINACIONES' }],
@@ -52,7 +30,10 @@ const FormScreen: React.FC = () => {
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const blobUrlRef = useRef<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => () => { if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current); }, []);
   const [saved, setSaved] = useState(false);
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
   const [modal, setModal] = useState<any>(null);
@@ -234,8 +215,11 @@ const FormScreen: React.FC = () => {
               accept="image/*"
               onChange={(e) => {
                 if (e.target.files?.[0]) {
-                  setImageFile(e.target.files[0]);
-                  setImagePreview(URL.createObjectURL(e.target.files[0]));
+                  const file = e.target.files[0];
+                  setImageFile(file);
+                  const url = createBlobUrl(file, blobUrlRef.current);
+                  blobUrlRef.current = url;
+                  setImagePreview(url);
                 }
               }}
               className="absolute inset-0 opacity-0 cursor-pointer"

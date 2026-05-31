@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { supabase, logActivity } from './supabase';
 import { Session } from '@supabase/supabase-js';
 import { Bell, X } from 'lucide-react';
+import { getIsAPK } from './utils/platform';
 
 import MenuScreen from './components/MenuScreen';
 import MaterialScreen from './components/MaterialScreen';
@@ -21,7 +22,7 @@ const App: React.FC = () => {
   const [deliveryAlerts, setDeliveryAlerts] = useState<Array<{ id: string; client: string; message: string }>>([]);
   const location = useLocation();
 
-  const isAPK = /wv|android|iphone/i.test(navigator.userAgent) && !/chrome|safari/i.test(navigator.userAgent) || /wv/i.test(navigator.userAgent);
+  const isAPK = getIsAPK();
   const isAdmin = userRole === 'admin';
   const isViewer = userRole === 'viewer';
   const loadInFlight = useRef(false);

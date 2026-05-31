@@ -4,41 +4,8 @@ import { ChevronLeft, Trash2, MapPin, Search, Camera, Loader2, Image as ImageIco
 import { supabase } from "../supabase";
 import AppModal from "./AppModal";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
-
-const BADGE_COLORS = {
-  cascos:    { on: 'text-blue-400 bg-blue-500/10 border-blue-500/20',         off: 'text-slate-600 bg-slate-800/50 border-slate-700' },
-  puertas:   { on: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', off: 'text-slate-600 bg-slate-800/50 border-slate-700' },
-  tiradores: { on: 'text-amber-400 bg-amber-500/10 border-amber-500/20',       off: 'text-slate-600 bg-slate-800/50 border-slate-700' },
-};
-const getBadgeClass = (isActive: boolean, type: keyof typeof BADGE_COLORS) =>
-  `w-10 h-6 flex items-center justify-center text-[9px] font-black tracking-tighter rounded-md border transition-all shrink-0 ${
-    isActive ? BADGE_COLORS[type].on : BADGE_COLORS[type].off
-  } uppercase`;
-
-const compressImage = (file: File): Promise<File> => {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (event) => {
-      const img = new Image();
-      img.src = event.target?.result as string;
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX_SIZE = 1600;
-        let width = img.width; let height = img.height;
-        if (width > height && width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
-        else if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
-        canvas.width = width; canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, width, height);
-        canvas.toBlob((blob) => {
-          if (blob) resolve(new File([blob], file.name, { type: 'image/jpeg' }));
-          else resolve(file);
-        }, 'image/jpeg', 0.85);
-      };
-    };
-  });
-};
+import { BADGE_COLORS, getBadgeClass } from "../utils/badges";
+import { compressImage, createBlobUrl } from "../utils/imageUtils";
 
 const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders = [], isAdmin }) => {
   const navigate = useNavigate();
@@ -62,6 +29,10 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
   const [fullscreenImg, setFullscreenImg] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const blobUrlRef = useRef<string | null>(null);
+
+  // Limpia blob URLs al desmontar el componente
+  useEffect(() => () => { if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current); }, []);
   const [modal, setModal] = useState<any>(null);
 
   const showAlert = (title: string, message?: string, iconBg = 'bg-orange-600', icon = <AlertTriangle size={28} className="text-white" />) =>
@@ -83,7 +54,9 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
   const resetForm = () => {
     setClient(""); setEstado(""); setRack(""); setNivel(""); setCascos(false);
     setPuertas(false); setTiradores(false); setNotes(""); setEditingId(null);
-    setImageFile(null); setImagePreview(null);
+    setImageFile(null);
+    if (blobUrlRef.current) { URL.revokeObjectURL(blobUrlRef.current); blobUrlRef.current = null; }
+    setImagePreview(null);
   };
 
   const onSave = async () => {
@@ -260,8 +233,11 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
                   type="file"
                   onChange={e => {
                     if (e.target.files?.[0]) {
-                      setImageFile(e.target.files[0]);
-                      setImagePreview(URL.createObjectURL(e.target.files[0]));
+                      const file = e.target.files[0];
+                      setImageFile(file);
+                      const url = createBlobUrl(file, blobUrlRef.current);
+                      blobUrlRef.current = url;
+                      setImagePreview(url);
                     }
                   }}
                   accept="image/*"
@@ -306,8 +282,8 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
 
             {/* Rack / Nivel */}
             <div className="grid grid-cols-2 gap-2">
-              <input value={rack} onChange={e => setRack(e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-white font-black uppercase outline-none transition-all" placeholder="RACK" />
-              <input value={nivel} onChange={e => setNivel(e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-white font-black uppercase outline-none transition-all" placeholder="NIVEL" />
+              <input type="number" inputMode="numeric" value={rack} onChange={e => setRack(e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-white font-black outline-none transition-all" placeholder="RACK" />
+              <input type="number" inputMode="numeric" value={nivel} onChange={e => setNivel(e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-white font-black outline-none transition-all" placeholder="NIVEL" />
             </div>
 
             {/* ✅ FIX: Campo Notas — antes no existía en el JSX */}
