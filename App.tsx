@@ -78,10 +78,16 @@ const App: React.FC = () => {
     loadData();
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session?.user?.email) {
-        logActivity(session.user.email, 'login');
+        // Solo loguear si es un login fresco (no una sesión restaurada por recarga)
+        const key = `logged_${session.access_token.slice(-10)}`;
+        if (!sessionStorage.getItem(key)) {
+          sessionStorage.setItem(key, '1');
+          logActivity(session.user.email, 'login');
+        }
       } else if (event === 'SIGNED_OUT' && activeEmail.current) {
         logActivity(activeEmail.current, 'logout');
         activeEmail.current = null;
+        sessionStorage.clear();
       }
       loadData();
     });

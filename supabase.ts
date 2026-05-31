@@ -12,7 +12,7 @@ export async function logActivity(
   details?: Record<string, unknown>
 ) {
   const isAPK = /wv/i.test(navigator.userAgent);
-  await supabase.from('unico_activity_log').insert({
+  const { error } = await supabase.from('unico_activity_log').insert({
     user_email: userEmail,
     event,
     details: {
@@ -21,4 +21,5 @@ export async function logActivity(
       ...details,
     },
   });
+  if (error) console.error('[activity]', error);
 }

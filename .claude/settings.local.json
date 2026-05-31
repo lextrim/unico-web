@@ -14,7 +14,16 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "mcp__claude_ai_Supabase__list_tables",
-      "mcp__claude_ai_Supabase__apply_migration"
+      "mcp__claude_ai_Supabase__apply_migration",
+      "Bash(supabase --version)",
+      "Bash(npx supabase:*)",
+      "Bash(supabase projects:*)",
+      "Bash(dir C:\\\\UnicoWeb /a)",
+      "Bash(cat /c/UnicoWeb/.github/workflows/*.yml)",
+      "Bash(supabase login:*)",
+      "Bash(supabase db:*)",
+      "Bash(supabase link:*)",
+      "Bash(curl:*)"
     ]
   }
 }
