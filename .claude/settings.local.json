@@ -23,7 +23,8 @@
       "Bash(supabase login:*)",
       "Bash(supabase db:*)",
       "Bash(supabase link:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(gh run:*)"
     ]
   }
 }
