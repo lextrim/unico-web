@@ -1,33 +1,79 @@
-# APK (Android Studio) - WebView Wrapper
+# UnicoWeb — APK Android (WebView Wrapper)
 
-Este repo incluye un proyecto Android real (`/app`) que carga tu build de Vite/React desde `android_asset`.
+App de gestión de taller de carpintería. Envuelve la webapp React en un WebView nativo de Android.
 
-## 1) Generar el build web
-En la raíz (donde está `package.json`):
+---
+
+## ¿Qué hace la app?
+
+- **Material** — registro de entrada de cocinas al taller. Cada registro puede incluir fecha de entrega, rack/nivel de almacenaje, foto, notas y componentes (cascos, puertas, tiradores). Los registros solo se pueden crear desde aquí (trazabilidad obligatoria).
+- **Armándose** — cocinas en proceso de montaje.
+- **Terminada** — cocinas montadas esperando entrega.
+- **Entregas (PROGRAMADA)** — cocinas con fecha/hora de entrega programada. Ordenadas por proximidad de entrega.
+- **Terminaciones** — trabajos pendientes de remate.
+
+Las tarjetas se colorean según días laborables restantes hasta la entrega (festivos de Sevilla incluidos):
+- 🟢 Verde — más de 4 días laborables
+- 🟠 Naranja — entre 2 y 4 días
+- 🔴 Rojo — 2 días o menos
+- 🔴 Rojo intenso — fecha vencida
+
+---
+
+## Roles
+
+- **Admin** — puede crear, editar, mover y borrar registros.
+- **Viewer** — solo lectura.
+
+---
+
+## Stack
+
+- React 19 + TypeScript + Vite + TailwindCSS
+- Supabase (auth + PostgreSQL + Storage)
+- Android WebView (`com.valen.cocinanuevo.webwrapper`)
+
+---
+
+## Compilar la APK
+
+### Requisitos
+- Node.js + pnpm
+- Java 17 (Eclipse Adoptium recomendado)
+- Android SDK
+
+### Pasos
 
 ```bash
-npm install
+# 1. Build web
 npm run build
+# Genera dist/ y lo copia a app/src/main/assets/web/
+
+# 2. Compilar APK
+JAVA_HOME="C:/Program Files/Eclipse Adoptium/jdk-17.0.16.8-hotspot" ./gradlew assembleRelease
+
+# 3. Firmar (debug keystore)
+jarsigner -keystore ~/.android/debug.keystore -storepass android -keypass android \
+  -signedjar app/build/outputs/apk/release/app-release-signed.apk \
+  app/build/outputs/apk/release/app-release-unsigned.apk androiddebugkey
 ```
 
-Esto crea la carpeta `dist/`.
+APK firmada en: `app/build/outputs/apk/release/app-release-signed.apk`
 
-## 2) Abrir en Android Studio
-- **Open** la carpeta raíz (la que contiene `settings.gradle.kts`).
-- Sync Gradle.
+---
 
-## 3) Build APK
-- **Build > Build APK(s)**
+## Deploy web (GitHub Pages)
 
-### Copia automática de `dist/` a assets
-El módulo `app` tiene un task `syncWebAssets` que, si existe `dist/`, lo copia a:
+```bash
+npm run deploy
+```
 
-`app/src/main/assets/web/`
+URL producción: https://lextrim.github.io/unico-web/
 
-y después la app carga:
-
-`file:///android_asset/web/index.html`
+---
 
 ## Notas
-- Asegúrate de que `vite.config.ts` tiene `base: './'` en producción (ya está aplicado en este zip).
-- Si usas React Router con history (no hash), la navegación interna en `file://` puede requerir ajustes (hash routing suele ser más simple en WebView).
+
+- `vite.config.ts` tiene `base: './'` para que funcione en `file://` (WebView).
+- Las notificaciones de entrega se programan con `AlarmManager` nativo (clases: `NotificationScheduler`, `DeliveryAlarmReceiver`, `SnoozeReceiver`, `BootReceiver`).
+- Los festivos de Sevilla (nacionales + Andalucía + Semana Santa + Lunes de Feria) están hardcodeados en `utils/workingDays.ts`.
