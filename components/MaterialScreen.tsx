@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Trash2, MapPin, Search, Camera, Loader2, Image as ImageIcon, Edit3, X, FileText, AlertTriangle, AlertCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, Trash2, MapPin, Search, Camera, Loader2, Image as ImageIcon, Edit3, X, FileText, AlertTriangle, AlertCircle } from "lucide-react";
 import { supabase } from "../supabase";
 import AppModal from "./AppModal";
+import DateTimePickerModal from "./DateTimePickerModal";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { BADGE_COLORS, getBadgeClass } from "../utils/badges";
 import { compressImage, createBlobUrl } from "../utils/imageUtils";
@@ -69,8 +70,7 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const blobUrlRef = useRef<string | null>(null);
-  const dateInputRef = useRef<HTMLInputElement>(null);
-  const timeInputRef = useRef<HTMLInputElement>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   // Limpia blob URLs al desmontar el componente
   useEffect(() => () => { if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current); }, []);
@@ -194,6 +194,14 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
   return (
     <div className="flex flex-col h-screen bg-slate-950 text-white overflow-hidden relative">
       {modal && <AppModal {...modal} />}
+      {showDatePicker && (
+        <DateTimePickerModal
+          initialDate={deliveryDate}
+          initialTime={deliveryTime}
+          onConfirm={(date, time) => { setDeliveryDate(date); setDeliveryTime(time); setShowDatePicker(false); }}
+          onCancel={() => setShowDatePicker(false)}
+        />
+      )}
       {fullscreenImg && (
         <div className="fixed inset-0 z-[110] bg-black/95 backdrop-blur-sm flex items-center justify-center">
           <button
@@ -318,33 +326,23 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
                   </button>
                 )}
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                {/* Botón DÍA — llama a showPicker() en el input oculto */}
-                <button
-                  type="button"
-                  onClick={() => dateInputRef.current?.showPicker()}
-                  className="bg-slate-900 border border-slate-800 rounded-xl flex flex-col items-center justify-center py-3 gap-1 active:bg-slate-800 transition-all"
-                >
-                  <span className="text-[9px] font-black uppercase text-slate-500">DÍA</span>
-                  <span className={`text-sm font-black ${deliveryDate ? 'text-white' : 'text-slate-600'}`}>
-                    {deliveryDate ? new Date(deliveryDate + 'T12:00').toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '-- / -- / --'}
-                  </span>
-                </button>
-                {/* Botón HORA — llama a showPicker() en el input oculto */}
-                <button
-                  type="button"
-                  onClick={() => timeInputRef.current?.showPicker()}
-                  className="bg-slate-900 border border-slate-800 rounded-xl flex flex-col items-center justify-center py-3 gap-1 active:bg-slate-800 transition-all"
-                >
-                  <span className="text-[9px] font-black uppercase text-slate-500">HORA</span>
-                  <span className={`text-sm font-black ${deliveryTime ? 'text-white' : 'text-slate-600'}`}>
-                    {deliveryTime || '--:--'}
-                  </span>
-                </button>
-                {/* Inputs ocultos */}
-                <input ref={dateInputRef} type="date" value={deliveryDate} onChange={e => setDeliveryDate(e.target.value)} className="sr-only" />
-                <input ref={timeInputRef} type="time" value={deliveryTime} onChange={e => setDeliveryTime(e.target.value)} className="sr-only" />
-              </div>
+              <button
+                type="button"
+                onClick={() => setShowDatePicker(true)}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between px-4 py-3.5 active:bg-slate-800 transition-all"
+              >
+                {deliveryDate ? (
+                  <div className="flex items-center gap-3">
+                    <span className="text-white font-black text-sm">
+                      {new Date(deliveryDate + 'T12:00').toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                    </span>
+                    <span className="text-slate-400 font-black text-sm">{deliveryTime || '00:00'}</span>
+                  </div>
+                ) : (
+                  <span className="text-slate-600 font-black text-sm uppercase">Seleccionar fecha y hora</span>
+                )}
+                <ChevronRight size={16} className="text-slate-500" />
+              </button>
             </div>
 
             {/* Checkboxes */}
