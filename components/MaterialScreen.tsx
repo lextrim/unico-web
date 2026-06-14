@@ -59,7 +59,8 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
   const [tiradores, setTiradores] = useState(false);
   const [filterCascos, setFilterCascos] = useState(false);
   const [filterPuertas, setFilterPuertas] = useState(false);
-  const [deliveryDatetime, setDeliveryDatetime] = useState("");
+  const [deliveryDate, setDeliveryDate] = useState("");
+  const [deliveryTime, setDeliveryTime] = useState("");
   const [notes, setNotes] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [listLoading, setListLoading] = useState(true);
@@ -91,7 +92,7 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
 
   const resetForm = () => {
     setClient(""); setEstado(""); setRack(""); setNivel(""); setCascos(false);
-    setPuertas(false); setTiradores(false); setDeliveryDatetime(""); setNotes(""); setEditingId(null);
+    setPuertas(false); setTiradores(false); setDeliveryDate(""); setDeliveryTime(""); setNotes(""); setEditingId(null);
     setImageFile(null);
     if (blobUrlRef.current) { URL.revokeObjectURL(blobUrlRef.current); blobUrlRef.current = null; }
     setImagePreview(null);
@@ -123,7 +124,7 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
         ubicado: `${rack.trim().toUpperCase()} - ${nivel.trim().toUpperCase()}`,
         notes: notes.toUpperCase().trim(),
         image_url: finalImageUrl,
-        ...(deliveryDatetime ? { deliveryDatetime } : {})
+        ...(deliveryDate ? { deliveryDatetime: `${deliveryDate}T${deliveryTime || '00:00'}` } : {})
       };
       if (estado !== "") {
         await supabase.from('unico_orders').insert({
@@ -158,7 +159,9 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
     setCascos(r.cascos || false);
     setPuertas(r.puertas || false);
     setTiradores(r.tiradores || false);
-    setDeliveryDatetime(r.deliveryDatetime || "");
+    const [dDate, dTime] = (r.deliveryDatetime || "").split('T');
+    setDeliveryDate(dDate || "");
+    setDeliveryTime(dTime ? dTime.slice(0, 5) : "");
     setNotes(r.notes || "");
     setImagePreview(r.image_url || null);
     if (scrollContainerRef.current) scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
@@ -305,19 +308,39 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
 
             {/* Fecha de entrega */}
             <div className="space-y-1">
-              <label className="text-[10px] font-black uppercase text-slate-500 px-1">Fecha de entrega</label>
-              <div className="flex gap-2">
-                <input
-                  type="datetime-local"
-                  value={deliveryDatetime}
-                  onChange={e => setDeliveryDatetime(e.target.value)}
-                  className="flex-1 bg-slate-900 border border-slate-800 rounded-xl p-4 text-white font-black outline-none focus:border-blue-500 transition-all"
-                />
-                {deliveryDatetime && (
-                  <button onClick={() => setDeliveryDatetime("")} className="px-4 bg-slate-800 rounded-xl text-slate-400 text-[10px] font-black uppercase active:scale-90 transition-all">
-                    <X size={16} />
+              <div className="flex items-center justify-between px-1">
+                <label className="text-[10px] font-black uppercase text-slate-500">Fecha de entrega</label>
+                {deliveryDate && (
+                  <button onClick={() => { setDeliveryDate(""); setDeliveryTime(""); }} className="text-[9px] font-black uppercase text-red-400 active:scale-90 transition-all">
+                    QUITAR
                   </button>
                 )}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <label className="relative bg-slate-900 border border-slate-800 rounded-xl flex flex-col items-center justify-center py-3 gap-1 cursor-pointer active:bg-slate-800 transition-all focus-within:border-blue-500">
+                  <span className="text-[9px] font-black uppercase text-slate-500">DÍA</span>
+                  <span className={`text-sm font-black ${deliveryDate ? 'text-white' : 'text-slate-600'}`}>
+                    {deliveryDate ? new Date(deliveryDate + 'T12:00').toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '-- / -- / --'}
+                  </span>
+                  <input
+                    type="date"
+                    value={deliveryDate}
+                    onChange={e => setDeliveryDate(e.target.value)}
+                    className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                  />
+                </label>
+                <label className="relative bg-slate-900 border border-slate-800 rounded-xl flex flex-col items-center justify-center py-3 gap-1 cursor-pointer active:bg-slate-800 transition-all focus-within:border-blue-500">
+                  <span className="text-[9px] font-black uppercase text-slate-500">HORA</span>
+                  <span className={`text-sm font-black ${deliveryTime ? 'text-white' : 'text-slate-600'}`}>
+                    {deliveryTime || '--:--'}
+                  </span>
+                  <input
+                    type="time"
+                    value={deliveryTime}
+                    onChange={e => setDeliveryTime(e.target.value)}
+                    className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                  />
+                </label>
               </div>
             </div>
 
