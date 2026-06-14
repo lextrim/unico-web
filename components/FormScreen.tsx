@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ChevronLeft, Save, Image as ImageIcon, Loader2, Clock, AlertTriangle, AlertCircle, ChevronDown } from 'lucide-react';
 import { supabase } from '../supabase';
 import AppModal from './AppModal';
-import DeliveryModal from './DeliveryModal';
+import DateTimePickerModal from './DateTimePickerModal';
 import { compressImage, createBlobUrl } from '../utils/imageUtils';
 
 const NEXT_OPTIONS: Record<string, { value: string; label: string }[]> = {
@@ -100,6 +100,11 @@ const FormScreen: React.FC = () => {
     if (!clientUpper) { showAlert("Campo obligatorio", "El nombre del cliente es obligatorio"); return; }
 
     if (!id) {
+      // Solo se puede crear desde Material — bloquear creación directa en otras categorías
+      if (targetCategory !== 'MATERIALES') {
+        showAlert("Acceso restringido", "Los registros solo se pueden crear desde la pantalla de Material.");
+        return;
+      }
       const FINAL_STATES = ['TERMINADA', 'TERMINACIONES'];
       if (targetCategory === 'MATERIALES') {
         const { data: matDups } = await supabase.from('unico_materials').select('id, payload').limit(500);
@@ -127,9 +132,9 @@ const FormScreen: React.FC = () => {
     await doSave(formData.deliveryDatetime || null);
   };
 
-  const handleDeliveryConfirm = async (datetime: string | null) => {
+  const handleDeliveryConfirm = async (date: string, time: string) => {
     setShowDeliveryModal(false);
-    await doSave(datetime);
+    await doSave(`${date}T${time}`);
   };
 
   const doSave = async (deliveryDatetime: string | null) => {
@@ -184,7 +189,7 @@ const FormScreen: React.FC = () => {
 
       {modal && <AppModal {...modal} />}
       {showDeliveryModal && (
-        <DeliveryModal
+        <DateTimePickerModal
           onConfirm={handleDeliveryConfirm}
           onCancel={() => setShowDeliveryModal(false)}
         />
@@ -256,6 +261,10 @@ const FormScreen: React.FC = () => {
               className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-white font-bold text-sm outline-none"
               style={{ textTransform: 'uppercase' }}
               placeholder="CLIENTE"
+              autoCorrect="off"
+              autoComplete="off"
+              spellCheck={false}
+              autoCapitalize="characters"
             />
 
             {/* ✅ Checkboxes SOLO si la categoría es MATERIALES */}

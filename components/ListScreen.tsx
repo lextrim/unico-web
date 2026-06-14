@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, Plus, Trash2, MapPin, Search, X, Image as ImageIcon, Edit3, FileText, Clock, CalendarClock, AlertCircle } from 'lucide-react';
+import { ChevronLeft, Trash2, MapPin, Search, X, Image as ImageIcon, Edit3, FileText, Clock, CalendarClock, AlertCircle } from 'lucide-react';
 import { supabase } from '../supabase';
 import AppModal from './AppModal';
 import DeliveryModal from './DeliveryModal';
@@ -218,11 +218,6 @@ const ListScreen: React.FC<{ orders: any[], onDelete: (id: string) => void, isAd
               {currentCat === 'PROGRAMADA' ? 'ENTREGAS' : currentCat}
             </h1>
           </div>
-          {isAdmin && (
-            <button onClick={() => nav(`/form/${category}`)} className="bg-white/20 p-2 rounded-full active:scale-90 transition-transform">
-              <Plus size={24} />
-            </button>
-          )}
         </div>
       </div>
 

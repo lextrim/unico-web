@@ -104,8 +104,22 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
     if (!client.trim()) { showAlert("Campo obligatorio", "El nombre del cliente es obligatorio"); return; }
     const clientUpper = client.toUpperCase().trim();
     if (!editingId) {
-      const dup = records.find(r => r.client?.toUpperCase().trim() === clientUpper);
-      if (dup) { showAlert("Cliente duplicado", `"${clientUpper}" ya está en la lista de Materiales`); return; }
+      // Comprobar duplicado en materiales
+      const dupMat = records.find(r => r.client?.toUpperCase().trim() === clientUpper);
+      if (dupMat) { showAlert("Cliente duplicado", `"${clientUpper}" ya está en la lista de Materiales`); return; }
+      // Comprobar duplicado en pedidos activos
+      const { data: ordDups } = await supabase.from('unico_orders').select('id, payload, category').limit(500);
+      const FINAL_STATES = ['TERMINADA', 'TERMINACIONES'];
+      const dupOrd = (ordDups || []).find((r: any) =>
+        r.payload?.client?.toUpperCase().trim() === clientUpper &&
+        !FINAL_STATES.includes((r.category || '').toUpperCase())
+      );
+      if (dupOrd) {
+        const CAT_LABEL: Record<string, string> = { ARMANDOSE: 'Armándose', TERMINADA: 'Terminada', PROGRAMADA: 'Entregas', TERMINACIONES: 'Terminaciones' };
+        const donde = CAT_LABEL[(dupOrd.category || '').toUpperCase()] || dupOrd.category;
+        showAlert("Cliente duplicado", `"${clientUpper}" ya existe en ${donde}`);
+        return;
+      }
     }
     setIsUploading(true);
     try {
@@ -278,6 +292,10 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
               onChange={e => setClient(e.target.value)}
               className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-white font-black uppercase outline-none focus:border-blue-500 transition-all"
               placeholder="CLIENTE"
+              autoCorrect="off"
+              autoComplete="off"
+              spellCheck={false}
+              autoCapitalize="characters"
             />
 
             {/* Foto */}
