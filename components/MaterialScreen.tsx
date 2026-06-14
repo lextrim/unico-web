@@ -69,6 +69,8 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const blobUrlRef = useRef<string | null>(null);
+  const dateInputRef = useRef<HTMLInputElement>(null);
+  const timeInputRef = useRef<HTMLInputElement>(null);
 
   // Limpia blob URLs al desmontar el componente
   useEffect(() => () => { if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current); }, []);
@@ -317,30 +319,31 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
                 )}
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <label className="relative bg-slate-900 border border-slate-800 rounded-xl flex flex-col items-center justify-center py-3 gap-1 cursor-pointer active:bg-slate-800 transition-all focus-within:border-blue-500">
+                {/* Botón DÍA — llama a showPicker() en el input oculto */}
+                <button
+                  type="button"
+                  onClick={() => dateInputRef.current?.showPicker()}
+                  className="bg-slate-900 border border-slate-800 rounded-xl flex flex-col items-center justify-center py-3 gap-1 active:bg-slate-800 transition-all"
+                >
                   <span className="text-[9px] font-black uppercase text-slate-500">DÍA</span>
                   <span className={`text-sm font-black ${deliveryDate ? 'text-white' : 'text-slate-600'}`}>
                     {deliveryDate ? new Date(deliveryDate + 'T12:00').toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '-- / -- / --'}
                   </span>
-                  <input
-                    type="date"
-                    value={deliveryDate}
-                    onChange={e => setDeliveryDate(e.target.value)}
-                    className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
-                  />
-                </label>
-                <label className="relative bg-slate-900 border border-slate-800 rounded-xl flex flex-col items-center justify-center py-3 gap-1 cursor-pointer active:bg-slate-800 transition-all focus-within:border-blue-500">
+                </button>
+                {/* Botón HORA — llama a showPicker() en el input oculto */}
+                <button
+                  type="button"
+                  onClick={() => timeInputRef.current?.showPicker()}
+                  className="bg-slate-900 border border-slate-800 rounded-xl flex flex-col items-center justify-center py-3 gap-1 active:bg-slate-800 transition-all"
+                >
                   <span className="text-[9px] font-black uppercase text-slate-500">HORA</span>
                   <span className={`text-sm font-black ${deliveryTime ? 'text-white' : 'text-slate-600'}`}>
                     {deliveryTime || '--:--'}
                   </span>
-                  <input
-                    type="time"
-                    value={deliveryTime}
-                    onChange={e => setDeliveryTime(e.target.value)}
-                    className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
-                  />
-                </label>
+                </button>
+                {/* Inputs ocultos */}
+                <input ref={dateInputRef} type="date" value={deliveryDate} onChange={e => setDeliveryDate(e.target.value)} className="sr-only" />
+                <input ref={timeInputRef} type="time" value={deliveryTime} onChange={e => setDeliveryTime(e.target.value)} className="sr-only" />
               </div>
             </div>
 
