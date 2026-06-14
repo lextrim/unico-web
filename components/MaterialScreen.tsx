@@ -6,15 +6,15 @@ import AppModal from "./AppModal";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { BADGE_COLORS, getBadgeClass } from "../utils/badges";
 import { compressImage, createBlobUrl } from "../utils/imageUtils";
+import { countWorkingDaysUntil } from "../utils/workingDays";
 
-// Returns urgency level based on days until delivery
+// Returns urgency level based on working days until delivery (excludes weekends + Seville holidays)
 const getDeliveryUrgency = (deliveryDatetime: string | null | undefined) => {
   if (!deliveryDatetime) return null;
-  const diff = new Date(deliveryDatetime).getTime() - Date.now();
-  const days = diff / (1000 * 60 * 60 * 24);
-  if (diff < 0) return 'overdue';
-  if (days <= 2) return 'critical';
-  if (days <= 4) return 'warning';
+  const workingDays = countWorkingDaysUntil(deliveryDatetime);
+  if (workingDays < 0) return 'overdue';
+  if (workingDays <= 2) return 'critical';
+  if (workingDays <= 4) return 'warning';
   return 'ok';
 };
 
@@ -409,11 +409,20 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
                   <span className={getBadgeClass(r.puertas, 'puertas')}>PT</span>
                   <span className={getBadgeClass(r.tiradores, 'tiradores')}>TR</span>
                 </div>
-                {urgency && r.deliveryDatetime && (
-                  <span className={`inline-block mt-2 text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-widest ${URGENCY_BADGE[urgency]}`}>
-                    {formatDeliveryDate(r.deliveryDatetime)}
-                  </span>
-                )}
+                {urgency && r.deliveryDatetime && (() => {
+                  const wd = countWorkingDaysUntil(r.deliveryDatetime);
+                  const wdLabel = wd < 0 ? 'VENCIDA' : wd === 0 ? 'HOY' : wd === 1 ? '1 DÍA' : `${wd} DÍAS`;
+                  return (
+                    <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                      <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-widest ${URGENCY_BADGE[urgency]}`}>
+                        {formatDeliveryDate(r.deliveryDatetime)}
+                      </span>
+                      <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-widest ${URGENCY_BADGE[urgency]}`}>
+                        {wdLabel}
+                      </span>
+                    </div>
+                  );
+                })()}
                 {r.notes && (
                   <p className="text-[10px] text-slate-400 mt-2 flex items-start gap-1 leading-snug">
                     <FileText size={10} className="inline shrink-0 mt-[1px]" />
