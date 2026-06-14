@@ -330,7 +330,7 @@ const ListScreen: React.FC<{ orders: any[], onDelete: (id: string) => void, isAd
                             {formatDeliveryShort(o.deliveryDatetime)}
                           </span>
                           <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-widest ${URGENCY_BADGE[workingUrgency]}`}>
-                            {wdLabel}
+                            {wdLabel} <span className="font-bold normal-case tracking-normal">para entrega</span>
                           </span>
                         </div>
                       );
