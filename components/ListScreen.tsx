@@ -6,6 +6,42 @@ import AppModal from './AppModal';
 import DeliveryModal from './DeliveryModal';
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { getBadgeClass } from '../utils/badges';
+import { countWorkingDaysUntil } from '../utils/workingDays';
+
+// Urgencia por días laborables (para categorías no-PROGRAMADA)
+const getWorkingDayUrgency = (dt: string | null | undefined) => {
+  if (!dt) return null;
+  const wd = countWorkingDaysUntil(dt);
+  if (wd < 0) return 'overdue';
+  if (wd <= 2) return 'critical';
+  if (wd <= 4) return 'warning';
+  return 'ok';
+};
+
+const URGENCY_CARD: Record<string, string> = {
+  overdue:  'border-l-4 border-l-red-600 bg-red-950/30',
+  critical: 'border-l-4 border-l-red-500 bg-red-950/20',
+  warning:  'border-l-4 border-l-amber-500 bg-amber-950/20',
+  ok:       'border-l-4 border-l-emerald-500 bg-emerald-950/20',
+};
+
+const URGENCY_BADGE: Record<string, string> = {
+  overdue:  'text-red-400 bg-red-500/15 border border-red-500/30',
+  critical: 'text-red-400 bg-red-500/10 border border-red-500/20',
+  warning:  'text-amber-400 bg-amber-500/10 border border-amber-500/20',
+  ok:       'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20',
+};
+
+const formatDeliveryShort = (dt: string) => {
+  const d = new Date(dt);
+  const diffMs = d.getTime() - Date.now();
+  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+  const time = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  if (diffMs < 0) return `VENCIDA · ${d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}`;
+  if (diffDays < 1) return `HOY · ${time}`;
+  if (diffDays < 2) return `MAÑANA · ${time}`;
+  return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' }) + ` · ${time}`;
+};
 
 const colors: Record<string, string> = {
   'ARMANDOSE': 'bg-orange-600',
@@ -123,10 +159,14 @@ const ListScreen: React.FC<{ orders: any[], onDelete: (id: string) => void, isAd
       );
     }
 
-    // ARMANDOSE, TERMINADA, TERMINACIONES: más antiguo primero (mayor prioridad)
-    return [...filtered].sort((a, b) =>
+    // ARMANDOSE, TERMINADA, TERMINACIONES: con fecha primero (ascendente), luego por antigüedad
+    const withDate = filtered.filter(o => o.deliveryDatetime).sort((a, b) =>
+      new Date(a.deliveryDatetime).getTime() - new Date(b.deliveryDatetime).getTime()
+    );
+    const withoutDate = filtered.filter(o => !o.deliveryDatetime).sort((a, b) =>
       new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
     );
+    return [...withDate, ...withoutDate];
   }, [data, search, isEntregas, currentCat]);
 
   return (
@@ -220,12 +260,17 @@ const ListScreen: React.FC<{ orders: any[], onDelete: (id: string) => void, isAd
           {filteredData.map(o => {
             const delivery = o.deliveryDatetime ? formatDelivery(o.deliveryDatetime) : null;
             const style = o.deliveryDatetime ? getDeliveryStyle(o.deliveryDatetime) : null;
+            const workingUrgency = !isEntregas ? getWorkingDayUrgency(o.deliveryDatetime) : null;
 
             return (
               <div
                 key={o.id}
                 className={`bg-slate-900 border rounded-2xl shadow-sm overflow-hidden ${
-                  isEntregas && style ? `border-l-4 ${style.dot.replace('bg-', 'border-l-')} border-slate-800` : 'border-slate-800'
+                  isEntregas && style
+                    ? `border-l-4 ${style.dot.replace('bg-', 'border-l-')} border-slate-800`
+                    : workingUrgency
+                    ? `border-slate-800 ${URGENCY_CARD[workingUrgency]}`
+                    : 'border-slate-800'
                 }`}
               >
                 {/* ✅ Banner de fecha/hora destacado en tarjetas de ENTREGAS */}
@@ -279,6 +324,22 @@ const ListScreen: React.FC<{ orders: any[], onDelete: (id: string) => void, isAd
                         <span className={getBadgeClass(o.tiradores, 'tiradores')}>TR</span>
                       </div>
                     )}
+
+                    {/* Fecha de entrega en categorías no-PROGRAMADA */}
+                    {workingUrgency && o.deliveryDatetime && (() => {
+                      const wd = countWorkingDaysUntil(o.deliveryDatetime);
+                      const wdLabel = wd < 0 ? 'VENCIDA' : wd === 0 ? 'HOY' : wd === 1 ? '1 DÍA' : `${wd} DÍAS`;
+                      return (
+                        <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                          <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-widest ${URGENCY_BADGE[workingUrgency]}`}>
+                            {formatDeliveryShort(o.deliveryDatetime)}
+                          </span>
+                          <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-widest ${URGENCY_BADGE[workingUrgency]}`}>
+                            {wdLabel}
+                          </span>
+                        </div>
+                      );
+                    })()}
 
                     {/* Notas */}
                     {o.notes && (
