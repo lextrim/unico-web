@@ -7,6 +7,43 @@ import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { BADGE_COLORS, getBadgeClass } from "../utils/badges";
 import { compressImage, createBlobUrl } from "../utils/imageUtils";
 
+// Returns urgency level based on days until delivery
+const getDeliveryUrgency = (deliveryDatetime: string | null | undefined) => {
+  if (!deliveryDatetime) return null;
+  const diff = new Date(deliveryDatetime).getTime() - Date.now();
+  const days = diff / (1000 * 60 * 60 * 24);
+  if (diff < 0) return 'overdue';
+  if (days <= 2) return 'critical';
+  if (days <= 4) return 'warning';
+  return 'ok';
+};
+
+const URGENCY_CARD: Record<string, string> = {
+  overdue:  'border-l-4 border-l-red-600 bg-red-950/30',
+  critical: 'border-l-4 border-l-red-500 bg-red-950/20',
+  warning:  'border-l-4 border-l-amber-500 bg-amber-950/20',
+  ok:       'border-l-4 border-l-emerald-500 bg-emerald-950/20',
+};
+
+const URGENCY_BADGE: Record<string, string> = {
+  overdue:  'text-red-400 bg-red-500/15 border border-red-500/30',
+  critical: 'text-red-400 bg-red-500/10 border border-red-500/20',
+  warning:  'text-amber-400 bg-amber-500/10 border border-amber-500/20',
+  ok:       'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20',
+};
+
+const formatDeliveryDate = (dt: string) => {
+  const d = new Date(dt);
+  const now = new Date();
+  const diffMs = d.getTime() - now.getTime();
+  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+  const time = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  if (diffMs < 0) return `VENCIDA · ${d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}`;
+  if (diffDays < 1) return `HOY · ${time}`;
+  if (diffDays < 2) return `MAÑANA · ${time}`;
+  return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' }) + ` · ${time}`;
+};
+
 const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders = [], isAdmin }) => {
   const navigate = useNavigate();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -22,6 +59,7 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
   const [tiradores, setTiradores] = useState(false);
   const [filterCascos, setFilterCascos] = useState(false);
   const [filterPuertas, setFilterPuertas] = useState(false);
+  const [deliveryDatetime, setDeliveryDatetime] = useState("");
   const [notes, setNotes] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [listLoading, setListLoading] = useState(true);
@@ -53,7 +91,7 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
 
   const resetForm = () => {
     setClient(""); setEstado(""); setRack(""); setNivel(""); setCascos(false);
-    setPuertas(false); setTiradores(false); setNotes(""); setEditingId(null);
+    setPuertas(false); setTiradores(false); setDeliveryDatetime(""); setNotes(""); setEditingId(null);
     setImageFile(null);
     if (blobUrlRef.current) { URL.revokeObjectURL(blobUrlRef.current); blobUrlRef.current = null; }
     setImagePreview(null);
@@ -84,7 +122,8 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
         tiradores,
         ubicado: `${rack.trim().toUpperCase()} - ${nivel.trim().toUpperCase()}`,
         notes: notes.toUpperCase().trim(),
-        image_url: finalImageUrl
+        image_url: finalImageUrl,
+        ...(deliveryDatetime ? { deliveryDatetime } : {})
       };
       if (estado !== "") {
         await supabase.from('unico_orders').insert({
@@ -119,19 +158,23 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
     setCascos(r.cascos || false);
     setPuertas(r.puertas || false);
     setTiradores(r.tiradores || false);
-    setNotes(r.notes || ""); // ✅ FIX: se cargaba vacío antes
+    setDeliveryDatetime(r.deliveryDatetime || "");
+    setNotes(r.notes || "");
     setImagePreview(r.image_url || null);
     if (scrollContainerRef.current) scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const filtered = useMemo(() => {
     const q = search.toUpperCase().trim();
-    return records.filter(r => {
+    const base = records.filter(r => {
       if (q && !r.client?.toUpperCase().includes(q) && !r.ubicado?.toUpperCase().includes(q)) return false;
       if (filterCascos && !r.cascos) return false;
       if (filterPuertas && !r.puertas) return false;
       return true;
     });
+    const withDate = base.filter(r => r.deliveryDatetime).sort((a, b) => new Date(a.deliveryDatetime).getTime() - new Date(b.deliveryDatetime).getTime());
+    const withoutDate = base.filter(r => !r.deliveryDatetime);
+    return [...withDate, ...withoutDate];
   }, [records, search, filterCascos, filterPuertas]);
 
   useEffect(() => {
@@ -260,6 +303,24 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
               <option value="TERMINACIONES">TERMINACIONES</option>
             </select>
 
+            {/* Fecha de entrega */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-black uppercase text-slate-500 px-1">Fecha de entrega</label>
+              <div className="flex gap-2">
+                <input
+                  type="datetime-local"
+                  value={deliveryDatetime}
+                  onChange={e => setDeliveryDatetime(e.target.value)}
+                  className="flex-1 bg-slate-900 border border-slate-800 rounded-xl p-4 text-white font-black outline-none focus:border-blue-500 transition-all"
+                />
+                {deliveryDatetime && (
+                  <button onClick={() => setDeliveryDatetime("")} className="px-4 bg-slate-800 rounded-xl text-slate-400 text-[10px] font-black uppercase active:scale-90 transition-all">
+                    <X size={16} />
+                  </button>
+                )}
+              </div>
+            </div>
+
             {/* Checkboxes */}
             <div className="grid grid-cols-3 gap-2">
               {['CASCOS', 'PUERTAS', 'TIRADORES'].map(f => (
@@ -323,8 +384,10 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
               </p>
             </div>
           ) : null}
-          {!listLoading && filtered.map(r => (
-            <div key={r.id} ref={el => { if (el) itemRefs.current.set(r.id, el); else itemRefs.current.delete(r.id); }} className="bg-slate-900 border border-slate-800 rounded-2xl p-3 flex items-start gap-4 shadow-sm">
+          {!listLoading && filtered.map(r => {
+            const urgency = getDeliveryUrgency(r.deliveryDatetime);
+            return (
+            <div key={r.id} ref={el => { if (el) itemRefs.current.set(r.id, el); else itemRefs.current.delete(r.id); }} className={`bg-slate-900 border border-slate-800 rounded-2xl p-3 flex items-start gap-4 shadow-sm ${urgency ? URGENCY_CARD[urgency] : ''}`}>
               {/* Imagen */}
               <div className="shrink-0 mt-1" onClick={() => r.image_url && setFullscreenImg(r.image_url)}>
                 {r.image_url
@@ -346,7 +409,11 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
                   <span className={getBadgeClass(r.puertas, 'puertas')}>PT</span>
                   <span className={getBadgeClass(r.tiradores, 'tiradores')}>TR</span>
                 </div>
-                {/* ✅ FIX: Mostrar notas en la tarjeta si existen */}
+                {urgency && r.deliveryDatetime && (
+                  <span className={`inline-block mt-2 text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-widest ${URGENCY_BADGE[urgency]}`}>
+                    {formatDeliveryDate(r.deliveryDatetime)}
+                  </span>
+                )}
                 {r.notes && (
                   <p className="text-[10px] text-slate-400 mt-2 flex items-start gap-1 leading-snug">
                     <FileText size={10} className="inline shrink-0 mt-[1px]" />
@@ -376,7 +443,8 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
                 </div>
               )}
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
