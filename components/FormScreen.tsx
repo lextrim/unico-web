@@ -33,7 +33,9 @@ const FormScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
+  const [showInlineDateModal, setShowInlineDateModal] = useState(false);
   const [modal, setModal] = useState<any>(null);
+  const [originalDeliveryDatetime, setOriginalDeliveryDatetime] = useState<string>('');
   const blobUrlRef = useRef<string | null>(null);
 
   useEffect(() => () => { if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current); }, []);
@@ -47,8 +49,8 @@ const FormScreen: React.FC = () => {
   // ✅ Solo Materiales tiene checkboxes CA/PT/TR
   const showBadgeFields = currentCategory === 'MATERIALES' || category?.toUpperCase() === 'MATERIALES';
 
-  // ✅ Si ya es un registro de ENTREGAS editándose, mostrar campo directo (no modal)
-  const isEditingEntregas = !!id && category?.toUpperCase() === 'PROGRAMADA';
+  // ✅ Si ya es un registro de ENTREGAS o TERMINACIONES editándose, mostrar campo directo (no modal)
+  const isEditingEntregas = !!id && (category?.toUpperCase() === 'PROGRAMADA' || category?.toUpperCase() === 'TERMINACIONES');
 
   useEffect(() => {
     const savedDraft = localStorage.getItem(draftKey);
@@ -67,6 +69,7 @@ const FormScreen: React.FC = () => {
               deliveryDatetime: payload.deliveryDatetime || '',
             });
           }
+          setOriginalDeliveryDatetime(payload.deliveryDatetime || '');
           if (payload.image_url || payload.image) setImagePreview(payload.image_url || payload.image);
         }
       };
@@ -149,10 +152,18 @@ const FormScreen: React.FC = () => {
         finalImageUrl = publicUrl;
       }
 
+      const newDeliveryDatetime = deliveryDatetime || formData.deliveryDatetime || '';
+      const existingHistory: { date: string; changedAt: string }[] = formData.deliveryDateHistory || [];
+      const updatedHistory =
+        id && originalDeliveryDatetime && originalDeliveryDatetime !== newDeliveryDatetime
+          ? [...existingHistory, { date: originalDeliveryDatetime, changedAt: new Date().toISOString() }]
+          : existingHistory;
+
       const finalPayload = {
         ...formData,
         image_url: finalImageUrl,
-        deliveryDatetime: deliveryDatetime || formData.deliveryDatetime || '',
+        deliveryDatetime: newDeliveryDatetime,
+        deliveryDateHistory: updatedHistory,
       };
       const targetCategory = (formData.category || category || '').toUpperCase();
       delete finalPayload.category;
@@ -192,6 +203,21 @@ const FormScreen: React.FC = () => {
         <DateTimePickerModal
           onConfirm={handleDeliveryConfirm}
           onCancel={() => setShowDeliveryModal(false)}
+        />
+      )}
+      {showInlineDateModal && (
+        <DateTimePickerModal
+          initialDate={formData.deliveryDatetime ? formData.deliveryDatetime.split('T')[0] : undefined}
+          initialTime={formData.deliveryDatetime ? formData.deliveryDatetime.split('T')[1]?.substring(0, 5) : undefined}
+          onConfirm={(date, time) => {
+            setFormData((p: any) => {
+              const updated = { ...p, deliveryDatetime: `${date}T${time}` };
+              localStorage.setItem(draftKey, JSON.stringify(updated));
+              return updated;
+            });
+            setShowInlineDateModal(false);
+          }}
+          onCancel={() => setShowInlineDateModal(false)}
         />
       )}
 
@@ -295,20 +321,23 @@ const FormScreen: React.FC = () => {
               className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-white font-bold text-sm resize-none outline-none"
             />
 
-            {/* ✅ Campo fecha/hora EDITABLE directamente si ya es un registro de ENTREGAS */}
+            {/* Campo fecha/hora — abre modal personalizado */}
             {isEditingEntregas && (
               <div className="space-y-2">
                 <label className="block text-[10px] font-black uppercase text-slate-500 ml-2 flex items-center gap-2">
                   <Clock size={12} className="text-indigo-400" />
                   Fecha y hora de entrega
                 </label>
-                <input
-                  type="datetime-local"
-                  name="deliveryDatetime"
-                  value={formData.deliveryDatetime || ''}
-                  onChange={handleInputChange}
-                  className="w-full bg-slate-950 border border-indigo-500/30 rounded-2xl p-4 text-white font-bold text-sm outline-none focus:border-indigo-500 transition-all"
-                />
+                <button
+                  type="button"
+                  onClick={() => setShowInlineDateModal(true)}
+                  className="w-full bg-slate-950 border border-indigo-500/30 rounded-2xl p-4 text-left font-bold text-sm outline-none active:border-indigo-500 transition-all"
+                >
+                  {formData.deliveryDatetime
+                    ? <span className="text-white">{new Date(formData.deliveryDatetime).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                    : <span className="text-slate-500">Toca para seleccionar fecha...</span>
+                  }
+                </button>
                 {formData.deliveryDatetime && (
                   <button
                     type="button"
@@ -317,6 +346,21 @@ const FormScreen: React.FC = () => {
                   >
                     Quitar fecha
                   </button>
+                )}
+                {(formData.deliveryDateHistory?.length > 0) && (
+                  <div className="mt-3 bg-slate-950 border border-slate-800 rounded-2xl p-3 space-y-1">
+                    <p className="text-[10px] font-black uppercase text-slate-500 mb-2">Historial de fechas anteriores</p>
+                    {[...(formData.deliveryDateHistory as { date: string; changedAt: string }[])].reverse().map((entry, i) => (
+                      <div key={i} className="flex justify-between items-center text-[11px]">
+                        <span className="text-slate-300 font-bold">
+                          {new Date(entry.date).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                        <span className="text-slate-600">
+                          cambiada {new Date(entry.changedAt).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             )}

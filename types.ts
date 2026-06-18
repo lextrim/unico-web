@@ -33,3 +33,8 @@ export interface StatusUI {
   label: string;
   value: OrderStatus;
 }
+
+export interface DeliveryDateChange {
+  date: string;       // ISO datetime que estaba antes del cambio
+  changedAt: string;  // cuándo se hizo el cambio
+}

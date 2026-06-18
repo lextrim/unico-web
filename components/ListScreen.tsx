@@ -114,7 +114,12 @@ const ListScreen: React.FC<{ orders: any[], onDelete: (id: string) => void, isAd
     setIsMoving(true);
     try {
       const { id, category: _cat, date: _date, status: _status, created_at, ...payloadFields } = moveTarget;
-      const updatedPayload = { ...payloadFields, deliveryDatetime: datetime || '' };
+      const existingHistory: { date: string; changedAt: string }[] = payloadFields.deliveryDateHistory || [];
+      const updatedHistory =
+        payloadFields.deliveryDatetime && payloadFields.deliveryDatetime !== (datetime || '')
+          ? [...existingHistory, { date: payloadFields.deliveryDatetime, changedAt: new Date().toISOString() }]
+          : existingHistory;
+      const updatedPayload = { ...payloadFields, deliveryDatetime: datetime || '', deliveryDateHistory: updatedHistory };
       await supabase
         .from('unico_orders')
         .update({ payload: updatedPayload, category: 'PROGRAMADA' })
