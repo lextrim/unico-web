@@ -34,12 +34,7 @@ const URGENCY_BADGE: Record<string, string> = {
 
 const formatDeliveryShort = (dt: string) => {
   const d = new Date(dt);
-  const diffMs = d.getTime() - Date.now();
-  const diffDays = diffMs / (1000 * 60 * 60 * 24);
   const time = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-  if (diffMs < 0) return `VENCIDA · ${d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}`;
-  if (diffDays < 1) return `HOY · ${time}`;
-  if (diffDays < 2) return `MAÑANA · ${time}`;
   return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' }) + ` · ${time}`;
 };
 
@@ -328,14 +323,14 @@ const ListScreen: React.FC<{ orders: any[], onDelete: (id: string) => void, isAd
                     {/* Fecha de entrega en categorías no-PROGRAMADA */}
                     {workingUrgency && o.deliveryDatetime && (() => {
                       const wd = countWorkingDaysUntil(o.deliveryDatetime);
-                      const wdLabel = wd < 0 ? 'VENCIDA' : wd === 0 ? 'HOY' : wd === 1 ? '1 DÍA' : `${wd} DÍAS`;
+                      const wdLabel = wd < 0 ? 'ENTREGA VENCIDA' : wd === 0 ? 'HOY' : wd === 1 ? '1 DÍA' : `${wd} DÍAS`;
                       return (
                         <div className="flex items-center gap-1.5 mt-2 flex-wrap">
                           <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-widest ${URGENCY_BADGE[workingUrgency]}`}>
                             {formatDeliveryShort(o.deliveryDatetime)}
                           </span>
                           <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full tracking-widest ${URGENCY_BADGE[workingUrgency]}`}>
-                            {wdLabel} <span className="font-bold normal-case tracking-normal">para entrega</span>
+                            {wdLabel}{wd >= 0 && <span className="font-bold normal-case tracking-normal"> para entrega</span>}
                           </span>
                         </div>
                       );
