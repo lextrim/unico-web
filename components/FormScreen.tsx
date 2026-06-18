@@ -50,7 +50,7 @@ const FormScreen: React.FC = () => {
   const showBadgeFields = currentCategory === 'MATERIALES' || category?.toUpperCase() === 'MATERIALES';
 
   // ✅ Si ya es un registro de ENTREGAS o TERMINACIONES editándose, mostrar campo directo (no modal)
-  const isEditingEntregas = !!id && (category?.toUpperCase() === 'PROGRAMADA' || category?.toUpperCase() === 'TERMINACIONES');
+  const isEditingEntregas = !!id && (category?.toUpperCase() === 'PROGRAMADA' || category?.toUpperCase() === 'TERMINACIONES' || category?.toUpperCase() === 'ARMANDOSE');
 
   useEffect(() => {
     const savedDraft = localStorage.getItem(draftKey);
