@@ -74,18 +74,22 @@ const App: React.FC = () => {
           const newAlertClients: string[] = [];
           for (const mat of toAutoMove) {
             const newId = crypto.randomUUID();
+            const client = (mat.payload?.client || '?').toUpperCase();
             const { error } = await supabase.from('unico_orders').insert({
               id: newId,
               payload: { ...mat.payload, status: 'ARMANDOSE', category: 'ARMANDOSE' },
               created_at: nowIso,
               category: 'ARMANDOSE'
             });
-            if (error) continue;
+            if (error) {
+              setDeliveryAlerts(prev => [...prev, { id: `err_${mat.id}`, client, message: `ERROR BD: ${error.message}` }]);
+              continue;
+            }
             await supabase.from('unico_materials').delete().eq('id', mat.id);
             bridge?.cancelNotification?.(`${mat.id}_armandose`);
             materials = materials.filter((x: any) => x.id !== mat.id);
             ordersData = [...ordersData, { id: newId, payload: { ...mat.payload, status: 'ARMANDOSE', category: 'ARMANDOSE' }, category: 'ARMANDOSE', created_at: nowIso }];
-            newAlertClients.push((mat.payload?.client || '').toUpperCase());
+            newAlertClients.push(client);
           }
           if (newAlertClients.length > 0) {
             setDeliveryAlerts(prev => [
