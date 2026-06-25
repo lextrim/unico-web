@@ -65,9 +65,12 @@ const App: React.FC = () => {
         ]);
 
         // Auto-mover materiales con \u22644 d\u00edas laborables antes de entrega
+        // Solo dentro del horario laboral (7:00\u201315:00); fuera de \u00e9l no se mueve nada
         let materials = m || [];
         let ordersData = o || [];
-        const toAutoMove = materials.filter((x: any) => {
+        const nowHour = new Date().getHours();
+        const isWorkHours = nowHour >= 7 && nowHour < 15;
+        const toAutoMove = !isWorkHours ? [] : materials.filter((x: any) => {
           const dt = x.payload?.deliveryDatetime;
           if (!dt) return false;
           return countWorkingDaysBeforeDelivery(dt) <= 4;

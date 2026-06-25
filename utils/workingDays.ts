@@ -121,7 +121,9 @@ export function countWorkingDaysBeforeDelivery(deliveryDatetime: string): number
   if (delivery <= now) return -1;
 
   const start = new Date(now);
-  start.setDate(start.getDate() + 1);
+  // Antes de las 7:00 la jornada no ha empezado: hoy todavía cuenta como día disponible.
+  // A partir de las 7:00 (en horario o fuera de él): la jornada de hoy está en curso o terminada, cuenta desde mañana.
+  if (now.getHours() >= 7) start.setDate(start.getDate() + 1);
   start.setHours(0, 0, 0, 0);
 
   const end = new Date(delivery);
