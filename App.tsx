@@ -4,7 +4,7 @@ import { supabase, logActivity } from './supabase';
 import { Session } from '@supabase/supabase-js';
 import { Bell, X } from 'lucide-react';
 import { getIsAPK } from './utils/platform';
-import { getAutoMoveTimestamp } from './utils/workingDays';
+import { getAutoMoveTimestamp, countWorkingDaysBeforeDelivery } from './utils/workingDays';
 
 import MenuScreen from './components/MenuScreen';
 import MaterialScreen from './components/MaterialScreen';
@@ -60,8 +60,43 @@ const App: React.FC = () => {
         const { data: m } = await supabase.from('unico_materials').select('*');
         const { data: o } = await supabase.from('unico_orders').select('*');
 
-        const formattedM = (m || []).map(x => ({ id: x.id, ...x.payload, category: 'MATERIALES', created_at: x.created_at }));
-        const formattedO = (o || []).map(x => {
+        // Auto-mover materiales con \u22644 d\u00edas laborables antes de entrega
+        let materials = m || [];
+        let ordersData = o || [];
+        const toAutoMove = materials.filter((x: any) => {
+          const dt = x.payload?.deliveryDatetime;
+          if (!dt) return false;
+          return countWorkingDaysBeforeDelivery(dt) <= 4;
+        });
+        if (toAutoMove.length > 0) {
+          const nowIso = new Date().toISOString();
+          const bridge = (window as any).AndroidBridge;
+          const newAlertClients: string[] = [];
+          for (const mat of toAutoMove) {
+            const newId = crypto.randomUUID();
+            const { error } = await supabase.from('unico_orders').insert({
+              id: newId,
+              payload: { ...mat.payload, status: 'ARMANDOSE', category: 'ARMANDOSE' },
+              created_at: nowIso,
+              category: 'ARMANDOSE'
+            });
+            if (error) continue;
+            await supabase.from('unico_materials').delete().eq('id', mat.id);
+            bridge?.cancelNotification?.(`${mat.id}_armandose`);
+            materials = materials.filter((x: any) => x.id !== mat.id);
+            ordersData = [...ordersData, { id: newId, payload: { ...mat.payload, status: 'ARMANDOSE', category: 'ARMANDOSE' }, category: 'ARMANDOSE', created_at: nowIso }];
+            newAlertClients.push((mat.payload?.client || '').toUpperCase());
+          }
+          if (newAlertClients.length > 0) {
+            setDeliveryAlerts(prev => [
+              ...prev,
+              ...newAlertClients.map(client => ({ id: `automove_${client}_${Date.now()}`, client, message: 'PASADO A ARM\u00c1NDOSE \u00b7 4 D\u00cdAS PARA ENTREGA' }))
+            ]);
+          }
+        }
+
+        const formattedM = materials.map((x: any) => ({ id: x.id, ...x.payload, category: 'MATERIALES', created_at: x.created_at }));
+        const formattedO = ordersData.map((x: any) => {
           const p = x.payload || {};
           let cat = (x.category || p.category || p.status || "").toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
           return { id: x.id, ...p, category: cat, image_url: p.image_url || p.image || null, created_at: x.created_at };
@@ -289,7 +324,7 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<Navigate to="/menu" replace />} />
           <Route path="/menu" element={<MenuScreen isAdmin={isAdmin} isViewer={isViewer} isAPK={isAPK} />} />
-          <Route path="/material" element={<MaterialScreen orders={orders} isAdmin={isAdmin} onRefresh={loadData} />} />
+          <Route path="/material" element={<MaterialScreen orders={orders} isAdmin={isAdmin} />} />
           <Route path="/list/:category" element={<ListScreen orders={orders} onDelete={handleDelete} isAdmin={isAdmin} />} />
           <Route path="/form/:category" element={isAdmin ? <FormScreen /> : <Navigate to="/menu" />} />
           <Route path="/form/:category/:id" element={isAdmin ? <FormScreen /> : <Navigate to="/menu" />} />

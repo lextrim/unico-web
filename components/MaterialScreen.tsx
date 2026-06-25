@@ -45,34 +45,7 @@ const formatDeliveryDate = (dt: string) => {
   return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' }) + ` · ${time}`;
 };
 
-async function autoMoveToArmandose(rawData: any[]): Promise<{ movedIds: Set<string>; movedClients: string[] }> {
-  const movedIds = new Set<string>();
-  const movedClients: string[] = [];
-  const toMove = rawData.filter((x: any) => {
-    const dt = x.payload?.deliveryDatetime;
-    if (!dt) return false;
-    return countWorkingDaysBeforeDelivery(dt) <= 4;
-  });
-  if (toMove.length === 0) return { movedIds, movedClients };
-  const nowIso = new Date().toISOString();
-  const bridge = (window as any).AndroidBridge;
-  for (const mat of toMove) {
-    const { error } = await supabase.from('unico_orders').insert({
-      id: crypto.randomUUID(),
-      payload: { ...mat.payload, status: 'ARMANDOSE', category: 'ARMANDOSE' },
-      created_at: nowIso,
-      category: 'ARMANDOSE'
-    });
-    if (error) continue;
-    await supabase.from('unico_materials').delete().eq('id', mat.id);
-    bridge?.cancelNotification?.(`${mat.id}_armandose`);
-    movedIds.add(mat.id);
-    movedClients.push((mat.payload?.client || '').toUpperCase());
-  }
-  return { movedIds, movedClients };
-}
-
-const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: () => void }> = ({ orders = [], isAdmin, onRefresh }) => {
+const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders = [], isAdmin }) => {
   const navigate = useNavigate();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -98,13 +71,6 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const blobUrlRef = useRef<string | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [autoMovedClients, setAutoMovedClients] = useState<string[]>([]);
-
-  useEffect(() => {
-    if (autoMovedClients.length === 0) return;
-    const t = setTimeout(() => setAutoMovedClients([]), 8000);
-    return () => clearTimeout(t);
-  }, [autoMovedClients]);
 
   // Limpia blob URLs al desmontar el componente
   useEffect(() => () => { if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current); }, []);
@@ -120,12 +86,7 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
     setListLoading(true);
     try {
       const { data } = await supabase.from('unico_materials').select('*').order('created_at', { ascending: false });
-      if (data) {
-        const { movedIds, movedClients } = await autoMoveToArmandose(data);
-        if (movedClients.length > 0) { setAutoMovedClients(movedClients); onRefresh?.(); }
-        const remaining = movedIds.size > 0 ? data.filter((m: any) => !movedIds.has(m.id)) : data;
-        setRecords(remaining.map((m: any) => ({ id: m.id, ...m.payload, server_created_at: m.created_at })));
-      }
+      if (data) setRecords(data.map((m: any) => ({ id: m.id, ...m.payload, server_created_at: m.created_at })));
     } finally { setListLoading(false); }
   };
 
@@ -286,17 +247,6 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
           <button onClick={() => navigate("/menu")} className="active:scale-90 transition-transform"><ChevronLeft size={28} /></button>
           <h1 className="text-lg font-black uppercase tracking-widest leading-none text-white">Material</h1>
         </div>
-        {autoMovedClients.length > 0 && (
-          <div className="bg-orange-500/90 px-4 py-2 flex items-center gap-3 border-t border-orange-400/30">
-            <AlertTriangle size={13} className="text-white shrink-0" />
-            <p className="text-[10px] font-black uppercase text-white flex-1 leading-tight tracking-wide">
-              Pasado a ARMÁNDOSE: {autoMovedClients.join(' · ')}
-            </p>
-            <button onClick={() => setAutoMovedClients([])} className="shrink-0 p-1 active:scale-90 transition-all">
-              <X size={13} className="text-white" />
-            </button>
-          </div>
-        )}
       </div>
 
       {/* Buscador */}
