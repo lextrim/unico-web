@@ -58,7 +58,7 @@ const CAT_COLOR: Record<string, string> = {
   TERMINACIONES: 'bg-red-600',
 };
 
-const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders = [], isAdmin }) => {
+const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: () => void }> = ({ orders = [], isAdmin, onRefresh }) => {
   const navigate = useNavigate();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -172,7 +172,7 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
           payload,
           created_at: ex ? ex.server_created_at : nowIso
         });
-        resetForm(); fetchMaterials();
+        resetForm(); fetchMaterials(); onRefresh?.();
       }
     } catch (err) { showAlert("Error al guardar", "Ha ocurrido un error. Inténtalo de nuevo.", 'bg-red-600', <AlertCircle size={28} className="text-white" />); }
     finally { setIsUploading(false); }
