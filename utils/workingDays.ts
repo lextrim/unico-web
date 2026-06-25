@@ -139,3 +139,26 @@ export function countWorkingDaysBeforeDelivery(deliveryDatetime: string): number
 
   return count;
 }
+
+/**
+ * Devuelve el timestamp (ms) de las 7:00h del día en que countWorkingDaysBeforeDelivery == 4,
+ * es decir, el día en que el material debe auto-moverse a ARMANDOSE.
+ */
+export function getAutoMoveTimestamp(deliveryDatetime: string): number {
+  const delivery = new Date(deliveryDatetime);
+  delivery.setHours(0, 0, 0, 0);
+
+  let count = 0;
+  const cursor = new Date(delivery);
+
+  while (count < 4) {
+    cursor.setDate(cursor.getDate() - 1);
+    const dow = cursor.getDay();
+    if (dow !== 0 && dow !== 6 && !getHolidays(cursor.getFullYear()).has(toKey(cursor))) {
+      count++;
+    }
+  }
+
+  cursor.setHours(7, 0, 0, 0);
+  return cursor.getTime();
+}

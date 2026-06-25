@@ -4,6 +4,7 @@ import { supabase, logActivity } from './supabase';
 import { Session } from '@supabase/supabase-js';
 import { Bell, X } from 'lucide-react';
 import { getIsAPK } from './utils/platform';
+import { getAutoMoveTimestamp } from './utils/workingDays';
 
 import MenuScreen from './components/MenuScreen';
 import MaterialScreen from './components/MaterialScreen';
@@ -134,6 +135,22 @@ const App: React.FC = () => {
           );
         }
       });
+
+    // Alarma para materiales que pasan a ARMANDOSE (7:00h del día de auto-movimiento)
+    orders
+      .filter(o => o.category === 'MATERIALES' && o.deliveryDatetime)
+      .forEach(order => {
+        const t = getAutoMoveTimestamp(order.deliveryDatetime);
+        if (t > now) {
+          const client = (order.client || 'CLIENTE').toUpperCase();
+          bridge.scheduleNotification(
+            `${order.id}_armandose`,
+            `PASA A ARMÁNDOSE: ${client}`,
+            `Tiene 4 días laborables para entrega. El pedido entra en armado hoy.`,
+            String(t)
+          );
+        }
+      });
   }, [orders, session, isAPK]);
 
   // Notificaciones en navegador web (banner in-app + Web Notifications)
@@ -156,12 +173,15 @@ const App: React.FC = () => {
       const now = Date.now();
       const notified = getNotified();
 
-      // ✅ Limpia IDs de órdenes eliminadas o que ya no están en PROGRAMADA
-      const activeKeys = new Set(
-        orders
+      // ✅ Limpia IDs de órdenes eliminadas o que ya no están activas
+      const activeKeys = new Set([
+        ...orders
           .filter(o => o.category === 'PROGRAMADA' && o.deliveryDatetime)
-          .flatMap(o => [`${o.id}_due`, `${o.id}_30min`])
-      );
+          .flatMap(o => [`${o.id}_due`, `${o.id}_30min`]),
+        ...orders
+          .filter(o => o.category === 'MATERIALES' && o.deliveryDatetime)
+          .map(o => `${o.id}_armandose`),
+      ]);
       const pruned = new Set([...notified].filter(k => activeKeys.has(k)));
       if (pruned.size !== notified.size) saveNotified(pruned);
       const notifiedClean = pruned;
@@ -196,6 +216,29 @@ const App: React.FC = () => {
           }
         });
 
+      // Notificación web para materiales que pasan a ARMANDOSE hoy
+      orders
+        .filter(o => o.category === 'MATERIALES' && o.deliveryDatetime)
+        .forEach(order => {
+          const triggerTime = getAutoMoveTimestamp(order.deliveryDatetime);
+          const triggerDate = new Date(triggerTime);
+          const today = new Date();
+          const isTodayAutoMoveDay =
+            triggerDate.getFullYear() === today.getFullYear() &&
+            triggerDate.getMonth() === today.getMonth() &&
+            triggerDate.getDate() === today.getDate();
+          if (isTodayAutoMoveDay && triggerTime <= now) {
+            const key = `${order.id}_armandose`;
+            if (!notifiedClean.has(key)) {
+              notifiedClean.add(key); changed = true;
+              const client = (order.client || 'CLIENTE').toUpperCase();
+              newAlerts.push({ id: key, client, message: 'PASA A ARMÁNDOSE HOY · 4 DÍAS PARA ENTREGA' });
+              if (typeof Notification !== 'undefined' && Notification.permission === 'granted')
+                new Notification(`🔧 ${client}`, { body: 'Este pedido entra en armado hoy (4 días laborables para entrega)', tag: key });
+            }
+          }
+        });
+
       if (changed) saveNotified(notifiedClean);
       if (newAlerts.length > 0) setDeliveryAlerts(prev => [...prev, ...newAlerts]);
     };
@@ -215,6 +258,7 @@ const App: React.FC = () => {
       const bridge = (window as any).AndroidBridge;
       bridge?.cancelNotification?.(`${id}_due`);
       bridge?.cancelNotification?.(`${id}_30min`);
+      bridge?.cancelNotification?.(`${id}_armandose`);
     }
     loadData();
   };
