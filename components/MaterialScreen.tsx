@@ -57,12 +57,13 @@ async function autoMoveToArmandose(rawData: any[]): Promise<{ movedIds: Set<stri
   const nowIso = new Date().toISOString();
   const bridge = (window as any).AndroidBridge;
   for (const mat of toMove) {
-    await supabase.from('unico_orders').insert({
+    const { error } = await supabase.from('unico_orders').insert({
       id: crypto.randomUUID(),
       payload: { ...mat.payload, status: 'ARMANDOSE', category: 'ARMANDOSE' },
       created_at: nowIso,
       category: 'ARMANDOSE'
     });
+    if (error) continue;
     await supabase.from('unico_materials').delete().eq('id', mat.id);
     bridge?.cancelNotification?.(`${mat.id}_armandose`);
     movedIds.add(mat.id);
@@ -71,7 +72,7 @@ async function autoMoveToArmandose(rawData: any[]): Promise<{ movedIds: Set<stri
   return { movedIds, movedClients };
 }
 
-const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders = [], isAdmin }) => {
+const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: () => void }> = ({ orders = [], isAdmin, onRefresh }) => {
   const navigate = useNavigate();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -121,7 +122,7 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
       const { data } = await supabase.from('unico_materials').select('*').order('created_at', { ascending: false });
       if (data) {
         const { movedIds, movedClients } = await autoMoveToArmandose(data);
-        if (movedClients.length > 0) setAutoMovedClients(movedClients);
+        if (movedClients.length > 0) { setAutoMovedClients(movedClients); onRefresh?.(); }
         const remaining = movedIds.size > 0 ? data.filter((m: any) => !movedIds.has(m.id)) : data;
         setRecords(remaining.map((m: any) => ({ id: m.id, ...m.payload, server_created_at: m.created_at })));
       }

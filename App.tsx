@@ -289,7 +289,7 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<Navigate to="/menu" replace />} />
           <Route path="/menu" element={<MenuScreen isAdmin={isAdmin} isViewer={isViewer} isAPK={isAPK} />} />
-          <Route path="/material" element={<MaterialScreen orders={orders} isAdmin={isAdmin} />} />
+          <Route path="/material" element={<MaterialScreen orders={orders} isAdmin={isAdmin} onRefresh={loadData} />} />
           <Route path="/list/:category" element={<ListScreen orders={orders} onDelete={handleDelete} isAdmin={isAdmin} />} />
           <Route path="/form/:category" element={isAdmin ? <FormScreen /> : <Navigate to="/menu" />} />
           <Route path="/form/:category/:id" element={isAdmin ? <FormScreen /> : <Navigate to="/menu" />} />
