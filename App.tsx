@@ -81,10 +81,7 @@ const App: React.FC = () => {
               created_at: nowIso,
               category: 'ARMANDOSE'
             });
-            if (error) {
-              setDeliveryAlerts(prev => [...prev, { id: `err_${mat.id}`, client, message: `ERROR BD: ${error.message}` }]);
-              continue;
-            }
+            if (error) { console.error('auto-move insert failed:', error.message); continue; }
             await supabase.from('unico_materials').delete().eq('id', mat.id);
             bridge?.cancelNotification?.(`${mat.id}_armandose`);
             materials = materials.filter((x: any) => x.id !== mat.id);

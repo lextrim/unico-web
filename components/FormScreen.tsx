@@ -50,7 +50,7 @@ const FormScreen: React.FC = () => {
   const showBadgeFields = currentCategory === 'MATERIALES' || category?.toUpperCase() === 'MATERIALES';
 
   // ✅ Si ya es un registro de ENTREGAS o TERMINACIONES editándose, mostrar campo directo (no modal)
-  const isEditingEntregas = !!id && (category?.toUpperCase() === 'PROGRAMADA' || category?.toUpperCase() === 'TERMINACIONES' || category?.toUpperCase() === 'ARMANDOSE');
+  const isEditingEntregas = !!id && (category?.toUpperCase() === 'PROGRAMADA' || category?.toUpperCase() === 'TERMINACIONES' || category?.toUpperCase() === 'ARMANDOSE' || category?.toUpperCase() === 'TERMINADA');
 
   useEffect(() => {
     const savedDraft = localStorage.getItem(draftKey);
@@ -188,7 +188,7 @@ const FormScreen: React.FC = () => {
 
       localStorage.removeItem(draftKey);
       setSaved(true);
-      setTimeout(() => navigate(`/list/${targetCategory}`), 600);
+      setTimeout(() => navigate(id ? `/list/${(category || targetCategory).toUpperCase()}` : `/list/${targetCategory}`), 600);
     } catch (error: any) {
       showAlert("Error al guardar", error?.message || "Ha ocurrido un error. Inténtalo de nuevo.", 'bg-red-600', <AlertCircle size={28} className="text-white" />);
       setLoading(false);
