@@ -45,6 +45,19 @@ const formatDeliveryDate = (dt: string) => {
   return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' }) + ` · ${time}`;
 };
 
+const CAT_LABEL: Record<string, string> = {
+  ARMANDOSE: 'ARMÁNDOSE',
+  TERMINADA: 'TERMINADA',
+  PROGRAMADA: 'ENTREGAS',
+  TERMINACIONES: 'TERMINACIONES',
+};
+const CAT_COLOR: Record<string, string> = {
+  ARMANDOSE: 'bg-orange-600',
+  TERMINADA: 'bg-emerald-600',
+  PROGRAMADA: 'bg-indigo-600',
+  TERMINACIONES: 'bg-red-600',
+};
+
 const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders = [], isAdmin }) => {
   const navigate = useNavigate();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -182,6 +195,15 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
     setImagePreview(r.image_url || null);
     if (scrollContainerRef.current) scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  const otherCategoryResults = useMemo(() => {
+    const q = search.toUpperCase().trim();
+    if (!q) return [];
+    return orders.filter(o =>
+      o.category !== 'MATERIALES' &&
+      o.client?.toUpperCase().includes(q)
+    );
+  }, [orders, search]);
 
   const filtered = useMemo(() => {
     const q = search.toUpperCase().trim();
@@ -496,6 +518,30 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
             </div>
             );
           })}
+          {/* Resultados en otras categorías */}
+          {search.trim() !== '' && otherCategoryResults.length > 0 && (
+            <div className="space-y-3 mt-2">
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-px bg-slate-800" />
+                <span className="text-[9px] font-black uppercase text-slate-600 tracking-widest shrink-0">En otras categorías</span>
+                <div className="flex-1 h-px bg-slate-800" />
+              </div>
+              {otherCategoryResults.map(o => (
+                <div key={o.id} className="bg-slate-900/60 border border-slate-800 rounded-2xl p-3 flex items-center gap-3">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-black uppercase truncate text-white leading-tight">{o.client}</h3>
+                    {o.notes && <p className="text-[10px] text-slate-500 mt-0.5 truncate">{o.notes}</p>}
+                  </div>
+                  <button
+                    onClick={() => navigate(`/list/${o.category}`)}
+                    className={`shrink-0 px-3 py-2 ${CAT_COLOR[o.category] || 'bg-slate-700'} rounded-xl text-[9px] font-black uppercase text-white active:scale-90 transition-all leading-none`}
+                  >
+                    {CAT_LABEL[o.category] || o.category}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
