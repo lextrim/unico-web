@@ -108,3 +108,34 @@ export function countWorkingDaysUntil(deliveryDatetime: string): number {
 
   return count;
 }
+
+/**
+ * Cuenta días laborables entre mañana y el día ANTERIOR a la entrega.
+ * No cuenta el día de entrega ni el día actual.
+ * Devuelve -1 si la entrega ya venció o es hoy.
+ */
+export function countWorkingDaysBeforeDelivery(deliveryDatetime: string): number {
+  const now = new Date();
+  const delivery = new Date(deliveryDatetime);
+
+  if (delivery <= now) return -1;
+
+  const start = new Date(now);
+  start.setDate(start.getDate() + 1);
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(delivery);
+  end.setHours(0, 0, 0, 0);
+
+  let count = 0;
+  const cursor = new Date(start);
+  while (cursor < end) {
+    const dow = cursor.getDay();
+    if (dow !== 0 && dow !== 6 && !getHolidays(cursor.getFullYear()).has(toKey(cursor))) {
+      count++;
+    }
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  return count;
+}

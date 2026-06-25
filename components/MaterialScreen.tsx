@@ -7,7 +7,7 @@ import DateTimePickerModal from "./DateTimePickerModal";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { BADGE_COLORS, getBadgeClass } from "../utils/badges";
 import { compressImage, createBlobUrl } from "../utils/imageUtils";
-import { countWorkingDaysUntil } from "../utils/workingDays";
+import { countWorkingDaysUntil, countWorkingDaysBeforeDelivery } from "../utils/workingDays";
 
 // Returns urgency level based on working days until delivery (excludes weekends + Seville holidays)
 const getDeliveryUrgency = (deliveryDatetime: string | null | undefined) => {
@@ -44,6 +44,28 @@ const formatDeliveryDate = (dt: string) => {
   if (diffDays < 2) return `MAÑANA · ${time}`;
   return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' }) + ` · ${time}`;
 };
+
+async function autoMoveToArmandose(rawData: any[]): Promise<Set<string>> {
+  const movedIds = new Set<string>();
+  const toMove = rawData.filter((x: any) => {
+    const dt = x.payload?.deliveryDatetime;
+    if (!dt) return false;
+    return countWorkingDaysBeforeDelivery(dt) <= 4;
+  });
+  if (toMove.length === 0) return movedIds;
+  const nowIso = new Date().toISOString();
+  for (const mat of toMove) {
+    await supabase.from('unico_orders').insert({
+      id: crypto.randomUUID(),
+      payload: { ...mat.payload, status: 'ARMANDOSE', category: 'ARMANDOSE' },
+      created_at: nowIso,
+      category: 'ARMANDOSE'
+    });
+    await supabase.from('unico_materials').delete().eq('id', mat.id);
+    movedIds.add(mat.id);
+  }
+  return movedIds;
+}
 
 const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders = [], isAdmin }) => {
   const navigate = useNavigate();
@@ -86,7 +108,11 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
     setListLoading(true);
     try {
       const { data } = await supabase.from('unico_materials').select('*').order('created_at', { ascending: false });
-      if (data) setRecords(data.map((m: any) => ({ id: m.id, ...m.payload, server_created_at: m.created_at })));
+      if (data) {
+        const movedIds = await autoMoveToArmandose(data);
+        const remaining = movedIds.size > 0 ? data.filter((m: any) => !movedIds.has(m.id)) : data;
+        setRecords(remaining.map((m: any) => ({ id: m.id, ...m.payload, server_created_at: m.created_at })));
+      }
     } finally { setListLoading(false); }
   };
 
@@ -452,7 +478,7 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean }> = ({ orders
                   <span className={getBadgeClass(r.tiradores, 'tiradores')}>TR</span>
                 </div>
                 {urgency && r.deliveryDatetime && (() => {
-                  const wd = countWorkingDaysUntil(r.deliveryDatetime);
+                  const wd = countWorkingDaysBeforeDelivery(r.deliveryDatetime);
                   const wdLabel = wd < 0 ? 'VENCIDA' : wd === 0 ? 'HOY' : wd === 1 ? '1 DÍA' : `${wd} DÍAS`;
                   return (
                     <div className="flex items-center gap-1.5 mt-2 flex-wrap">

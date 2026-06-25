@@ -6,7 +6,7 @@ import AppModal from './AppModal';
 import DeliveryModal from './DeliveryModal';
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { getBadgeClass } from '../utils/badges';
-import { countWorkingDaysUntil } from '../utils/workingDays';
+import { countWorkingDaysUntil, countWorkingDaysBeforeDelivery } from '../utils/workingDays';
 
 // Urgencia por días laborables (para categorías no-PROGRAMADA)
 const getWorkingDayUrgency = (dt: string | null | undefined) => {
@@ -322,7 +322,7 @@ const ListScreen: React.FC<{ orders: any[], onDelete: (id: string) => void, isAd
 
                     {/* Fecha de entrega en categorías no-PROGRAMADA */}
                     {workingUrgency && o.deliveryDatetime && (() => {
-                      const wd = countWorkingDaysUntil(o.deliveryDatetime);
+                      const wd = countWorkingDaysBeforeDelivery(o.deliveryDatetime);
                       const wdLabel = wd < 0 ? 'ENTREGA VENCIDA' : wd === 0 ? 'HOY' : wd === 1 ? '1 DÍA' : `${wd} DÍAS`;
                       return (
                         <div className="flex items-center gap-1.5 mt-2 flex-wrap">
