@@ -14,7 +14,7 @@ const NEXT_OPTIONS: Record<string, { value: string; label: string }[]> = {
 };
 
 // ─── FormScreen ────────────────────────────────────────────────────────────────
-const FormScreen: React.FC = () => {
+const FormScreen: React.FC<{ onSave?: (id: string, updated: any) => void }> = ({ onSave }) => {
   const { category, id } = useParams<{ category: string; id?: string }>();
   const navigate = useNavigate();
   const draftKey = `draft_unico_${category}_${id || 'new'}`;
@@ -174,6 +174,7 @@ const FormScreen: React.FC = () => {
           .update({ payload: finalPayload, category: targetCategory })
           .eq('id', id);
         if (error) throw error;
+        onSave?.(id, { id, ...finalPayload, category: targetCategory });
       } else {
         const { error } = await supabase
           .from('unico_orders')
@@ -188,7 +189,7 @@ const FormScreen: React.FC = () => {
 
       localStorage.removeItem(draftKey);
       setSaved(true);
-      setTimeout(() => navigate(id ? `/list/${(category || targetCategory).toUpperCase()}` : `/list/${targetCategory}`), 200);
+      setTimeout(() => navigate(id ? `/list/${(category || targetCategory).toUpperCase()}` : `/list/${targetCategory}`), 100);
     } catch (error: any) {
       showAlert("Error al guardar", error?.message || "Ha ocurrido un error. Inténtalo de nuevo.", 'bg-red-600', <AlertCircle size={28} className="text-white" />);
       setLoading(false);

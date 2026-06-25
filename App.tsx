@@ -291,6 +291,10 @@ const App: React.FC = () => {
     return () => clearInterval(interval);
   }, [orders, session]);
 
+  const handleRecordSaved = (savedId: string, updated: any) => {
+    setOrders(prev => prev.map(o => o.id === savedId ? { ...o, ...updated } : o));
+  };
+
   const handleDelete = async (id: string) => {
     await supabase.from('unico_orders').delete().eq('id', id);
     await supabase.from('unico_materials').delete().eq('id', id);
@@ -331,8 +335,8 @@ const App: React.FC = () => {
           <Route path="/menu" element={<MenuScreen isAdmin={isAdmin} isViewer={isViewer} isAPK={isAPK} />} />
           <Route path="/material" element={<MaterialScreen orders={orders} isAdmin={isAdmin} />} />
           <Route path="/list/:category" element={<ListScreen orders={orders} onDelete={handleDelete} isAdmin={isAdmin} />} />
-          <Route path="/form/:category" element={isAdmin ? <FormScreen /> : <Navigate to="/menu" />} />
-          <Route path="/form/:category/:id" element={isAdmin ? <FormScreen /> : <Navigate to="/menu" />} />
+          <Route path="/form/:category" element={isAdmin ? <FormScreen onSave={handleRecordSaved} /> : <Navigate to="/menu" />} />
+          <Route path="/form/:category/:id" element={isAdmin ? <FormScreen onSave={handleRecordSaved} /> : <Navigate to="/menu" />} />
           <Route path="/informes" element={(isAdmin || isViewer) ? <InformesScreen isAdmin={isAdmin || isViewer} isAPK={isAPK} /> : <Navigate to="/menu" />} />
           <Route path="/backup" element={isAdmin ? <BackupScreen /> : <Navigate to="/menu" />} />
           <Route path="/activity" element={isAdmin ? <ActivityScreen /> : <Navigate to="/menu" />} />
