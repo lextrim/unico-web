@@ -188,7 +188,7 @@ const FormScreen: React.FC = () => {
 
       localStorage.removeItem(draftKey);
       setSaved(true);
-      setTimeout(() => navigate(id ? `/list/${(category || targetCategory).toUpperCase()}` : `/list/${targetCategory}`), 600);
+      setTimeout(() => navigate(id ? `/list/${(category || targetCategory).toUpperCase()}` : `/list/${targetCategory}`), 200);
     } catch (error: any) {
       showAlert("Error al guardar", error?.message || "Ha ocurrido un error. Inténtalo de nuevo.", 'bg-red-600', <AlertCircle size={28} className="text-white" />);
       setLoading(false);

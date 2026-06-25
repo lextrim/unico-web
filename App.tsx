@@ -44,21 +44,25 @@ const App: React.FC = () => {
           return;
         }
 
-        const { data: role } = await supabase.from('unico_roles').select('*').eq('email', cur.user.email);
-
-        if (!role || role.length === 0) {
-          await supabase.auth.signOut();
-          setSession(null);
-          setUserRole(null);
-          return;
+        // Solo consulta roles en la primera carga (no cambian durante la sesión)
+        if (!userRole) {
+          const { data: role } = await supabase.from('unico_roles').select('*').eq('email', cur.user.email);
+          if (!role || role.length === 0) {
+            await supabase.auth.signOut();
+            setSession(null);
+            setUserRole(null);
+            return;
+          }
+          setUserRole(role[0].role as 'admin' | 'viewer');
         }
 
         activeEmail.current = cur.user.email ?? null;
         setSession(cur);
-        setUserRole(role[0].role as 'admin' | 'viewer');
 
-        const { data: m } = await supabase.from('unico_materials').select('*');
-        const { data: o } = await supabase.from('unico_orders').select('*');
+        const [{ data: m }, { data: o }] = await Promise.all([
+          supabase.from('unico_materials').select('*'),
+          supabase.from('unico_orders').select('*'),
+        ]);
 
         // Auto-mover materiales con \u22644 d\u00edas laborables antes de entrega
         let materials = m || [];
