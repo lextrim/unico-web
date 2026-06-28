@@ -172,7 +172,7 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
           payload,
           created_at: ex ? ex.server_created_at : nowIso
         });
-        resetForm(); fetchMaterials(); onRefresh?.();
+        resetForm(); await onRefresh?.(); fetchMaterials();
       }
     } catch (err) { showAlert("Error al guardar", "Ha ocurrido un error. Inténtalo de nuevo.", 'bg-red-600', <AlertCircle size={28} className="text-white" />); }
     finally { setIsUploading(false); }
