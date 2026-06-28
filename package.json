@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && pnpm copy-dist",
+    "build:vercel": "vite build",
     "preview": "vite preview",
     "copy-dist": "shx rm -rf app/src/main/assets/web && shx mkdir -p app/src/main/assets/web && shx cp -r dist/* app/src/main/assets/web",
     "predeploy": "pnpm build",
