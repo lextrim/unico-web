@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
   return {
-    base: mode === 'production' ? './' : '/',
+    base: process.env.VERCEL ? '/' : (mode === 'production' ? './' : '/'),
     plugins: [react()],
     server: {
       port: 3000,
