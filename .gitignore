@@ -4,3 +4,10 @@ caches/
 app/build/
 build/
 local.properties
+
+# Dependencias y caché
+node_modules/
+.pnpm-store/
+
+# Build
+dist/
