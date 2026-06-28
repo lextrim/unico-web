@@ -73,12 +73,17 @@ class MainActivity : AppCompatActivity() {
         if (webSettings != null) {
             webSettings.javaScriptEnabled = true
             webSettings.domStorageEnabled = true
-            webSettings.cacheMode = WebSettings.LOAD_NO_CACHE
+            webSettings.cacheMode = WebSettings.LOAD_DEFAULT
             webSettings.allowFileAccess = true
             webSettings.allowContentAccess = true
             webSettings.databaseEnabled = true
             webSettings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+            webSettings.setSupportZoom(false)
+            webSettings.builtInZoomControls = false
+            webSettings.mediaPlaybackRequiresUserGesture = false
         }
+        myWebView?.isScrollbarFadingEnabled = true
+        myWebView?.overScrollMode = android.view.View.OVER_SCROLL_NEVER
 
         myWebView?.addJavascriptInterface(AndroidBridge(), "AndroidBridge")
 
@@ -113,7 +118,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Cargamos v=7 para refrescar todo el diseño de píldoras y Rack/Nivel
-        myWebView?.loadUrl("https://lextrim.github.io/unico-web/?v=7")
+        myWebView?.loadUrl("https://unico-web.vercel.app/")
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
