@@ -23,6 +23,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.webkit.WebViewAssetLoader
 import java.io.File
 import java.io.FileOutputStream
 import java.util.*
@@ -87,7 +88,17 @@ class MainActivity : AppCompatActivity() {
 
         myWebView?.addJavascriptInterface(AndroidBridge(), "AndroidBridge")
 
+        // Sirve app/src/main/assets/web/ bajo un origen https virtual para que los
+        // <script type="module"> y el CSS con crossorigin no choquen con CORS (file:// = origen null).
+        val assetLoader = WebViewAssetLoader.Builder()
+            .addPathHandler("/", WebViewAssetLoader.AssetsPathHandler(this))
+            .build()
+
         myWebView?.webViewClient = object : WebViewClient() {
+            override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): WebResourceResponse? {
+                return request?.url?.let { assetLoader.shouldInterceptRequest(it) }
+            }
+
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 myWebView?.setBackgroundColor(Color.parseColor("#020617"))
@@ -117,7 +128,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        myWebView?.loadUrl("file:///android_asset/web/index.html")
+        myWebView?.loadUrl("https://appassets.androidplatform.net/web/index.html")
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
