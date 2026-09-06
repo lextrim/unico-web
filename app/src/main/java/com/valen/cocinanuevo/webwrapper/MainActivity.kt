@@ -5,6 +5,9 @@ import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -42,6 +45,19 @@ class MainActivity : AppCompatActivity() {
     private var myWebView: WebView? = null
     private var mUploadMessage: ValueCallback<Array<Uri>>? = null
     private var cameraImageUri: Uri? = null
+    private lateinit var connectivityManager: ConnectivityManager
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
+
+    private fun isNetworkConnected(): Boolean {
+        val network = connectivityManager.activeNetwork ?: return false
+        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+    }
+
+    private fun notifyWebConnectivity(online: Boolean) {
+        val eventName = if (online) "online" else "offline"
+        myWebView?.evaluateJavascript("window.dispatchEvent(new Event('$eventName'));", null)
+    }
 
     private val fileChooserLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (mUploadMessage == null) return@registerForActivityResult
@@ -88,6 +104,20 @@ class MainActivity : AppCompatActivity() {
 
         myWebView?.addJavascriptInterface(AndroidBridge(), "AndroidBridge")
 
+        // navigator.onLine no es fiable dentro de WebView (a menudo siempre true),
+        // asi que el estado real de conectividad se detecta de forma nativa y se
+        // reenvia a la web como eventos 'online'/'offline' estandar.
+        connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
+        networkCallback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                runOnUiThread { notifyWebConnectivity(true) }
+            }
+            override fun onLost(network: Network) {
+                runOnUiThread { notifyWebConnectivity(false) }
+            }
+        }
+        connectivityManager.registerDefaultNetworkCallback(networkCallback!!)
+
         // Sirve app/src/main/assets/web/ bajo un origen https virtual para que los
         // <script type="module"> y el CSS con crossorigin no choquen con CORS (file:// = origen null).
         val assetLoader = WebViewAssetLoader.Builder()
@@ -102,6 +132,7 @@ class MainActivity : AppCompatActivity() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 myWebView?.setBackgroundColor(Color.parseColor("#020617"))
+                notifyWebConnectivity(isNetworkConnected())
             }
         }
 
@@ -135,6 +166,11 @@ class MainActivity : AppCompatActivity() {
                 if (myWebView?.canGoBack() == true) myWebView?.goBack() else finish()
             }
         })
+    }
+
+    override fun onDestroy() {
+        networkCallback?.let { connectivityManager.unregisterNetworkCallback(it) }
+        super.onDestroy()
     }
 
     private fun updateStatusBarColor() {

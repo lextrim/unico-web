@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { supabase, logActivity } from './supabase';
 import { Session } from '@supabase/supabase-js';
-import { Bell, X } from 'lucide-react';
+import { Bell, X, WifiOff } from 'lucide-react';
 import { getIsAPK } from './utils/platform';
 import { getAutoMoveTimestamp, countWorkingDaysBeforeDelivery } from './utils/workingDays';
 
@@ -21,6 +21,7 @@ const App: React.FC = () => {
   const [userRole, setUserRole] = useState<'admin' | 'viewer' | null>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [deliveryAlerts, setDeliveryAlerts] = useState<Array<{ id: string; client: string; message: string }>>([]);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
   const location = useLocation();
 
   const isAPK = getIsAPK();
@@ -117,6 +118,18 @@ const App: React.FC = () => {
     } catch (e) { console.error(e); }
     finally { setLoading(false); loadInFlight.current = false; }
   };
+
+  // Detecta cambios de conectividad para avisar al usuario cuando está offline
+  useEffect(() => {
+    const goOnline = () => setIsOnline(true);
+    const goOffline = () => setIsOnline(false);
+    window.addEventListener('online', goOnline);
+    window.addEventListener('offline', goOffline);
+    return () => {
+      window.removeEventListener('online', goOnline);
+      window.removeEventListener('offline', goOffline);
+    };
+  }, []);
 
   // Carga inicial y detecta cambios de sesión (login/logout)
   useEffect(() => {
@@ -314,9 +327,18 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-950">
+      {/* Banner de estado offline */}
+      {!isOnline && (
+        <div className="fixed top-0 left-0 right-0 z-[210] bg-amber-600 shadow-2xl">
+          <div className="max-w-xl mx-auto px-4 py-2 flex items-center justify-center gap-2">
+            <WifiOff size={14} className="text-white shrink-0" />
+            <p className="text-[11px] font-black uppercase text-white tracking-wide leading-none">Sin conexión · Modo offline</p>
+          </div>
+        </div>
+      )}
       {/* Banner de notificación de entrega */}
       {deliveryAlerts.length > 0 && session && (
-        <div className="fixed top-0 left-0 right-0 z-[200] bg-red-600 shadow-2xl">
+        <div className="fixed left-0 right-0 z-[200] bg-red-600 shadow-2xl" style={{ top: isOnline ? 0 : 36 }}>
           <div className="max-w-xl mx-auto px-4 py-3 flex items-center gap-3">
             <Bell size={18} className="text-white shrink-0" />
             <div className="flex-1 min-w-0">
