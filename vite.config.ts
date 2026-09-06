@@ -1,11 +1,12 @@
 import path from 'path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig(({ mode }) => {
   return {
     base: process.env.VERCEL ? '/' : (mode === 'production' ? './' : '/'),
-    plugins: [react()],
+    plugins: [react(), tailwindcss()],
     server: {
       port: 3000,
       host: '0.0.0.0',
