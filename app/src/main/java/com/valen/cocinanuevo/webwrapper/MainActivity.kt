@@ -117,8 +117,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Cargamos v=7 para refrescar todo el diseño de píldoras y Rack/Nivel
-        myWebView?.loadUrl("https://unico-web.vercel.app/")
+        myWebView?.loadUrl("file:///android_asset/web/index.html")
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
