@@ -40,13 +40,23 @@ export function isFeriaDataMissing(year: number): boolean {
   return !FERIA_MONDAY[year];
 }
 
+// Festivo de fecha fija que cae en domingo: se traslada al lunes siguiente.
+// Confirmado en los decretos de calendario laboral de la Junta de Andalucía
+// (BOJA, Decreto 101/2025 para 2026 y Decreto 84/2026 para 2027): los sábados NO se trasladan.
+function fixedHolidayDate(year: number, month1to12: number, day: number): Date {
+  const date = new Date(year, month1to12 - 1, day);
+  if (date.getDay() === 0) return addDays(date, 1);
+  return date;
+}
+
 function getHolidaysForYear(year: number): Set<string> {
   const h = new Set<string>();
 
-  // Festivos nacionales fijos
+  // Festivos nacionales y de Andalucía, de fecha fija
   for (const [m, d] of [
     [1, 1],   // Año Nuevo
     [1, 6],   // Reyes
+    [2, 28],  // Día de Andalucía
     [5, 1],   // Día del Trabajo
     [8, 15],  // Asunción
     [10, 12], // Hispanidad
@@ -55,11 +65,8 @@ function getHolidaysForYear(year: number): Set<string> {
     [12, 8],  // Inmaculada
     [12, 25], // Navidad
   ] as [number, number][]) {
-    h.add(toKey(new Date(year, m - 1, d)));
+    h.add(toKey(fixedHolidayDate(year, m, d)));
   }
-
-  // Andalucía
-  h.add(toKey(new Date(year, 1, 28))); // 28 Feb
 
   // Semana Santa (Jueves + Viernes Santo)
   const easter = getEasterSunday(year);

@@ -122,7 +122,10 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
       const dupMat = records.find(r => r.client?.toUpperCase().trim() === clientUpper);
       if (dupMat) { showAlert("Cliente duplicado", `"${clientUpper}" ya está en la lista de Materiales`); return; }
       // Comprobar duplicado en pedidos activos
-      const { data: ordDups } = await supabase.from('unico_orders').select('id, payload, category').limit(500);
+      // Nota: esto es una comprobación "mejor esfuerzo" desde el cliente, no una garantía —
+      // dos guardados simultáneos pueden colarse los dos. La solución de verdad es un índice
+      // único en la base de datos (ver plan de migración de esquema pendiente).
+      const { data: ordDups } = await supabase.from('unico_orders').select('id, payload, category');
       const FINAL_STATES = ['TERMINADA', 'TERMINACIONES'];
       const dupOrd = (ordDups || []).find((r: any) =>
         r.payload?.client?.toUpperCase().trim() === clientUpper &&
@@ -140,8 +143,9 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
       let finalImageUrl = editingId ? records.find(r => r.id === editingId)?.image_url : null;
       if (imageFile) {
         const compressed = await compressImage(imageFile);
-        const fileName = `${Date.now()}.jpg`;
-        await supabase.storage.from('unico_images').upload(fileName, compressed);
+        const fileName = `${crypto.randomUUID()}.jpg`;
+        const { error: uploadError } = await supabase.storage.from('unico_images').upload(fileName, compressed);
+        if (uploadError) throw uploadError;
         const { data: pub } = supabase.storage.from('unico_images').getPublicUrl(fileName);
         finalImageUrl = pub.publicUrl;
       }
@@ -157,22 +161,37 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
         ...(deliveryDate ? { deliveryDatetime: `${deliveryDate}T${deliveryTime || '00:00'}` } : {})
       };
       if (estado !== "") {
-        await supabase.from('unico_orders').insert({
-          id: crypto.randomUUID(),
-          payload: { ...payload, status: estado, category: estado },
+        const STAGE_FIELD: Record<string, string> = {
+          ARMANDOSE: 'armandoseAt', TERMINADA: 'terminadaAt', PROGRAMADA: 'programadaFirstAt', TERMINACIONES: 'terminacionesAt'
+        };
+        const stageField = STAGE_FIELD[estado];
+        const stageStamp = stageField ? { [stageField]: Date.now() } : {};
+        const programadaExtra = estado === 'PROGRAMADA' ? { everProgramada: true, programadaLastAt: Date.now() } : {};
+        // Reutiliza el id del material como id del pedido: si esto se ejecuta dos veces
+        // (doble clic, reintento) el segundo insert falla por clave duplicada en vez de crear un pedido repetido.
+        const { error: insertError } = await supabase.from('unico_orders').insert({
+          id: editingId || crypto.randomUUID(),
+          payload: { ...payload, status: estado, category: estado, ...stageStamp, ...programadaExtra },
           created_at: nowIso,
           category: estado
         });
-        if (editingId) await supabase.from('unico_materials').delete().eq('id', editingId);
+        if (insertError) throw insertError;
+        if (editingId) {
+          const { error: deleteError } = await supabase.from('unico_materials').delete().eq('id', editingId);
+          if (deleteError) throw deleteError;
+          // Ya no está en Materiales: cancela la alarma nativa de "pasa a Armándose" si había una programada.
+          (window as any).AndroidBridge?.cancelNotification?.(`${editingId}_armandose`);
+        }
         resetForm();
         navigate(`/list/${estado}`);
       } else {
         const ex = editingId ? records.find(r => r.id === editingId) : null;
-        await supabase.from('unico_materials').upsert({
+        const { error: upsertError } = await supabase.from('unico_materials').upsert({
           id: editingId || crypto.randomUUID(),
           payload,
           created_at: ex ? ex.server_created_at : nowIso
         });
+        if (upsertError) throw upsertError;
         resetForm(); await onRefresh?.(); fetchMaterials();
       }
     } catch (err) { showAlert("Error al guardar", "Ha ocurrido un error. Inténtalo de nuevo.", 'bg-red-600', <AlertCircle size={28} className="text-white" />); }

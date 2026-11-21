@@ -7,6 +7,35 @@ import DateTimePickerModal from './DateTimePickerModal';
 import { compressImage, createBlobUrl } from '../utils/imageUtils';
 import { toTitleCase } from '../utils/text';
 
+// Un borrador más viejo que esto se descarta: evita que una edición abandonada
+// hace semanas resucite y pise datos buenos al reabrir la pantalla.
+const DRAFT_MAX_AGE_MS = 2 * 60 * 60 * 1000; // 2 horas
+
+function saveDraft(key: string, data: any) {
+  try { localStorage.setItem(key, JSON.stringify({ data, savedAt: Date.now() })); } catch {}
+}
+
+function loadFreshDraft(key: string): any | null {
+  const raw = localStorage.getItem(key);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && 'savedAt' in parsed) {
+      if (Date.now() - parsed.savedAt > DRAFT_MAX_AGE_MS) {
+        localStorage.removeItem(key);
+        return null;
+      }
+      return parsed.data;
+    }
+    // Formato antiguo sin savedAt (de antes de este cambio): se descarta por seguridad.
+    localStorage.removeItem(key);
+    return null;
+  } catch {
+    localStorage.removeItem(key);
+    return null;
+  }
+}
+
 const NEXT_OPTIONS: Record<string, { value: string; label: string }[]> = {
   ARMANDOSE:    [{ value: 'ARMANDOSE', label: 'ARMÁNDOSE' }, { value: 'TERMINADA', label: 'TERMINADA' }, { value: 'PROGRAMADA', label: 'ENTREGAS' }, { value: 'TERMINACIONES', label: 'TERMINACIONES' }],
   TERMINADA:    [{ value: 'TERMINADA', label: 'TERMINADA' }, { value: 'PROGRAMADA', label: 'ENTREGAS' }, { value: 'TERMINACIONES', label: 'TERMINACIONES' }],
@@ -54,14 +83,14 @@ const FormScreen: React.FC<{ onSave?: (id: string, updated: any) => void }> = ({
   const isEditingEntregas = !!id && (category?.toUpperCase() === 'PROGRAMADA' || category?.toUpperCase() === 'TERMINACIONES' || category?.toUpperCase() === 'ARMANDOSE' || category?.toUpperCase() === 'TERMINADA');
 
   useEffect(() => {
-    const savedDraft = localStorage.getItem(draftKey);
+    const savedDraft = loadFreshDraft(draftKey);
     if (id) {
       const fetchOrder = async () => {
         const { data } = await supabase.from('unico_orders').select('*').eq('id', id).single();
         if (data) {
           const payload = data.payload || {};
           if (savedDraft) {
-            setFormData(JSON.parse(savedDraft));
+            setFormData(savedDraft);
           } else {
             setFormData({
               ...payload,
@@ -76,7 +105,7 @@ const FormScreen: React.FC<{ onSave?: (id: string, updated: any) => void }> = ({
       };
       fetchOrder();
     } else if (savedDraft) {
-      setFormData(JSON.parse(savedDraft));
+      setFormData(savedDraft);
     }
   }, [id, category, draftKey]);
 
@@ -89,7 +118,7 @@ const FormScreen: React.FC<{ onSave?: (id: string, updated: any) => void }> = ({
       } else {
         newData[name] = value;
       }
-      localStorage.setItem(draftKey, JSON.stringify(newData));
+      saveDraft(draftKey, newData);
       return newData;
     });
   };
@@ -109,11 +138,11 @@ const FormScreen: React.FC<{ onSave?: (id: string, updated: any) => void }> = ({
       }
       const FINAL_STATES = ['TERMINADA', 'TERMINACIONES'];
       if (targetCategory === 'MATERIALES') {
-        const { data: matDups } = await supabase.from('unico_materials').select('id, payload').limit(500);
+        const { data: matDups } = await supabase.from('unico_materials').select('id, payload');
         const isDup = (matDups || []).some((r: any) => r.payload?.client?.toUpperCase().trim() === clientUpper);
         if (isDup) { showAlert("Cliente duplicado", `Ya existe un material con el cliente "${clientUpper}"`); return; }
       } else {
-        const { data: ordDups } = await supabase.from('unico_orders').select('id, payload, category').limit(500);
+        const { data: ordDups } = await supabase.from('unico_orders').select('id, payload, category');
         const dupRecord = (ordDups || []).find((r: any) =>
           r.payload?.client?.toUpperCase().trim() === clientUpper &&
           !FINAL_STATES.includes((r.category || '').toUpperCase())
@@ -127,7 +156,7 @@ const FormScreen: React.FC<{ onSave?: (id: string, updated: any) => void }> = ({
       }
     }
 
-    if (targetCategory === 'PROGRAMADA' && !isEditingEntregas) {
+    if (targetCategory === 'PROGRAMADA' && !formData.deliveryDatetime) {
       setShowDeliveryModal(true);
       return;
     }
@@ -145,8 +174,9 @@ const FormScreen: React.FC<{ onSave?: (id: string, updated: any) => void }> = ({
       let finalImageUrl = formData.image_url || formData.image || '';
       if (imageFile) {
         const compressed = await compressImage(imageFile);
-        const fileName = `${Date.now()}.jpg`;
-        await supabase.storage.from('unico_images').upload(fileName, compressed);
+        const fileName = `${crypto.randomUUID()}.jpg`;
+        const { error: uploadError } = await supabase.storage.from('unico_images').upload(fileName, compressed);
+        if (uploadError) throw uploadError;
         const { data: { publicUrl } } = supabase.storage.from('unico_images').getPublicUrl(fileName);
         finalImageUrl = publicUrl;
       }
@@ -158,14 +188,23 @@ const FormScreen: React.FC<{ onSave?: (id: string, updated: any) => void }> = ({
           ? [...existingHistory, { date: originalDeliveryDatetime, changedAt: new Date().toISOString() }]
           : existingHistory;
 
+      const targetCategory = (formData.category || category || '').toUpperCase();
+      const STAGE_FIELD: Record<string, string> = {
+        ARMANDOSE: 'armandoseAt', TERMINADA: 'terminadaAt', PROGRAMADA: 'programadaFirstAt', TERMINACIONES: 'terminacionesAt'
+      };
+      const stageField = STAGE_FIELD[targetCategory];
+      const stageStamp = stageField && !formData[stageField] ? { [stageField]: Date.now() } : {};
+      const programadaExtra = targetCategory === 'PROGRAMADA' ? { everProgramada: true, programadaLastAt: Date.now() } : {};
+
       const finalPayload = {
         ...formData,
         client: toTitleCase((formData.client || '').trim()),
         image_url: finalImageUrl,
         deliveryDatetime: newDeliveryDatetime,
         deliveryDateHistory: updatedHistory,
+        ...stageStamp,
+        ...programadaExtra,
       };
-      const targetCategory = (formData.category || category || '').toUpperCase();
       delete finalPayload.category;
 
       if (id) {
@@ -213,7 +252,7 @@ const FormScreen: React.FC<{ onSave?: (id: string, updated: any) => void }> = ({
           onConfirm={(date, time) => {
             setFormData((p: any) => {
               const updated = { ...p, deliveryDatetime: `${date}T${time}` };
-              localStorage.setItem(draftKey, JSON.stringify(updated));
+              saveDraft(draftKey, updated);
               return updated;
             });
             setShowInlineDateModal(false);

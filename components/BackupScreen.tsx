@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Download, Upload, AlertTriangle } from 'lucide-react';
 import { supabase } from '../supabase';
+import { fetchAllRows } from '../utils/fetchAll';
 
 const BackupScreen = () => {
   const navigate = useNavigate();
@@ -13,9 +14,9 @@ const BackupScreen = () => {
   const exportData = async () => {
     setLoading(true);
     try {
-      const { data: materials } = await supabase.from('unico_materials').select('*');
-      const { data: orders } = await supabase.from('unico_orders').select('*');
-      const backup = { date: new Date().toISOString(), materials: materials || [], orders: orders || [] };
+      const materials = await fetchAllRows('unico_materials');
+      const orders = await fetchAllRows('unico_orders');
+      const backup = { date: new Date().toISOString(), materials, orders };
       const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');

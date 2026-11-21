@@ -4,7 +4,8 @@ import { supabase, logActivity } from './supabase';
 import { Session } from '@supabase/supabase-js';
 import { Bell, X, WifiOff } from 'lucide-react';
 import { getIsAPK } from './utils/platform';
-import { getAutoMoveTimestamp, countWorkingDaysBeforeDelivery, isFeriaDataMissing } from './utils/workingDays';
+import { getAutoMoveTimestamp, isFeriaDataMissing } from './utils/workingDays';
+import { fetchAllRows } from './utils/fetchAll';
 
 import MenuScreen from './components/MenuScreen';
 import MaterialScreen from './components/MaterialScreen';
@@ -48,7 +49,12 @@ const App: React.FC = () => {
 
         // Solo consulta roles en la primera carga (no cambian durante la sesión)
         if (!userRole) {
-          const { data: role } = await supabase.from('unico_roles').select('*').eq('email', cur.user.email);
+          const { data: role, error: roleError } = await supabase.from('unico_roles').select('*').eq('email', cur.user.email);
+          if (roleError) {
+            // Fallo de red/consulta: no es lo mismo que "no tiene rol". No cerrar sesión, reintentar en la siguiente carga.
+            console.error('No se pudo comprobar el rol:', roleError.message);
+            return;
+          }
           if (!role || role.length === 0) {
             await supabase.auth.signOut();
             setSession(null);
@@ -61,49 +67,13 @@ const App: React.FC = () => {
         activeEmail.current = cur.user.email ?? null;
         setSession(cur);
 
-        const [{ data: m }, { data: o }] = await Promise.all([
-          supabase.from('unico_materials').select('*'),
-          supabase.from('unico_orders').select('*'),
+        // El paso a ARMANDOSE siempre lo decide el admin a mano (pantalla Material).
+        // La fecha de entrega solo dispara avisos (banner + notificacion nativa/web,
+        // ver los efectos de abajo que usan getAutoMoveTimestamp) -- nunca mueve nada sola.
+        const [materials, ordersData] = await Promise.all([
+          fetchAllRows('unico_materials'),
+          fetchAllRows('unico_orders'),
         ]);
-
-        // Auto-mover materiales con \u22644 d\u00edas laborables antes de entrega
-        // Solo dentro del horario laboral (7:00\u201315:00); fuera de \u00e9l no se mueve nada
-        let materials = m || [];
-        let ordersData = o || [];
-        const nowHour = new Date().getHours();
-        const isWorkHours = nowHour >= 7 && nowHour < 15;
-        const toAutoMove = !isWorkHours ? [] : materials.filter((x: any) => {
-          const dt = x.payload?.deliveryDatetime;
-          if (!dt) return false;
-          return countWorkingDaysBeforeDelivery(dt) <= 4;
-        });
-        if (toAutoMove.length > 0) {
-          const nowIso = new Date().toISOString();
-          const bridge = (window as any).AndroidBridge;
-          const newAlertClients: string[] = [];
-          for (const mat of toAutoMove) {
-            const newId = crypto.randomUUID();
-            const client = (mat.payload?.client || '?').toUpperCase();
-            const { error } = await supabase.from('unico_orders').insert({
-              id: newId,
-              payload: { ...mat.payload, status: 'ARMANDOSE', category: 'ARMANDOSE' },
-              created_at: nowIso,
-              category: 'ARMANDOSE'
-            });
-            if (error) { console.error('auto-move insert failed:', error.message); continue; }
-            await supabase.from('unico_materials').delete().eq('id', mat.id);
-            bridge?.cancelNotification?.(`${mat.id}_armandose`);
-            materials = materials.filter((x: any) => x.id !== mat.id);
-            ordersData = [...ordersData, { id: newId, payload: { ...mat.payload, status: 'ARMANDOSE', category: 'ARMANDOSE' }, category: 'ARMANDOSE', created_at: nowIso }];
-            newAlertClients.push(client);
-          }
-          if (newAlertClients.length > 0) {
-            setDeliveryAlerts(prev => [
-              ...prev,
-              ...newAlertClients.map(client => ({ id: `automove_${client}_${Date.now()}`, client, message: 'PASADO A ARM\u00c1NDOSE \u00b7 4 D\u00cdAS PARA ENTREGA' }))
-            ]);
-          }
-        }
 
         const formattedM = materials.map((x: any) => ({ id: x.id, ...x.payload, category: 'MATERIALES', created_at: x.created_at }));
         const formattedO = ordersData.map((x: any) => {

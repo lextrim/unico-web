@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Search, Calendar, MapPin, FileText, X, ChevronRight, Clock, Printer, Loader2 } from 'lucide-react';
-import { supabase } from '../supabase';
 import { getBadgeClass } from '../utils/badges';
+import { escapeHtml } from '../utils/text';
+import { fetchAllRows } from '../utils/fetchAll';
 
 const STATUS_COLORS: Record<string, string> = {
   MATERIALES:    'bg-blue-500/20 text-blue-400 border-blue-500/30',
@@ -86,12 +87,12 @@ const InformesScreen: React.FC<{ isAdmin: boolean; isAPK: boolean }> = ({ isAdmi
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      const { data: materials } = await supabase.from('unico_materials').select('*');
-      const mats = (materials || []).map(m => ({
+      const materials = await fetchAllRows('unico_materials');
+      const mats = materials.map(m => ({
         id: m.id, ...m.payload, status: 'MATERIALES', date: new Date(m.created_at),
       }));
-      const { data: orders } = await supabase.from('unico_orders').select('*');
-      const ords = (orders || []).map(o => ({
+      const orders = await fetchAllRows('unico_orders');
+      const ords = orders.map(o => ({
         id: o.id, ...o.payload,
         status: (o.category || o.payload?.status || 'PEDIDO').toUpperCase(),
         date: new Date(o.created_at),
@@ -145,13 +146,13 @@ const InformesScreen: React.FC<{ isAdmin: boolean; isAPK: boolean }> = ({ isAdmi
       const makeRows = (items: any[]) => items.map(r => `
         <tr>
           <td>${r.date.toLocaleDateString('es-ES')}</td>
-          <td><strong>${r.client || ''}</strong></td>
-          <td>${r.ubicado || ''}</td>
+          <td><strong>${escapeHtml(r.client || '')}</strong></td>
+          <td>${escapeHtml(r.ubicado || '')}</td>
           <td style="text-align:center">${r.cascos ? '✓' : '—'}</td>
           <td style="text-align:center">${r.puertas ? '✓' : '—'}</td>
           <td style="text-align:center">${r.tiradores ? '✓' : '—'}</td>
           <td>${r.deliveryDatetime ? new Date(r.deliveryDatetime).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''}</td>
-          <td>${r.notes || ''}</td>
+          <td>${escapeHtml(r.notes || '')}</td>
         </tr>`).join('');
 
       const body = grouped.map(g => `
@@ -169,16 +170,16 @@ const InformesScreen: React.FC<{ isAdmin: boolean; isAPK: boolean }> = ({ isAdmi
 
   const handlePrintTrace = () => {
     if (traceRecords.length === 0) return;
-    const clientName = traceRecord.client?.toUpperCase();
+    const clientName = escapeHtml(traceRecord.client?.toUpperCase() || '');
     const title = `TRAZABILIDAD · ${clientName}`;
     const subtitle = `Generado: ${new Date().toLocaleString('es-ES')} · ${traceRecords.length} etapas`;
     const steps = traceRecords.map((r, i) => {
       const next = traceRecords[i + 1];
       const elapsed = next ? diffLabel(next.date.getTime() - r.date.getTime()) : null;
       const extras = [
-        r.ubicado ? `📍 ${r.ubicado}` : '',
+        r.ubicado ? `📍 ${escapeHtml(r.ubicado)}` : '',
         r.deliveryDatetime ? `🕐 ${new Date(r.deliveryDatetime).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}` : '',
-        r.notes ? `📝 ${r.notes}` : '',
+        r.notes ? `📝 ${escapeHtml(r.notes)}` : '',
       ].filter(Boolean).join(' &nbsp;·&nbsp; ');
       return `
         <div class="step">
