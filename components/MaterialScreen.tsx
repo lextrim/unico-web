@@ -8,6 +8,7 @@ import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { BADGE_COLORS, getBadgeClass } from "../utils/badges";
 import { compressImage, createBlobUrl } from "../utils/imageUtils";
 import { countWorkingDaysUntil, countWorkingDaysBeforeDelivery } from "../utils/workingDays";
+import { toTitleCase } from "../utils/text";
 
 // Returns urgency level based on working days until delivery (excludes weekends + Seville holidays)
 const getDeliveryUrgency = (deliveryDatetime: string | null | undefined) => {
@@ -146,7 +147,7 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
       }
       const nowIso = new Date().toISOString();
       const payload = {
-        client: client.toUpperCase().trim(),
+        client: toTitleCase(client.trim()),
         cascos,
         puertas,
         tiradores,
@@ -312,12 +313,12 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
             <input
               value={client}
               onChange={e => setClient(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-white font-black uppercase outline-none focus:border-blue-500 transition-all"
+              className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-white font-black outline-none focus:border-blue-500 transition-all"
               placeholder="CLIENTE"
               autoCorrect="off"
               autoComplete="off"
               spellCheck={false}
-              autoCapitalize="characters"
+              autoCapitalize="words"
             />
 
             {/* Foto */}

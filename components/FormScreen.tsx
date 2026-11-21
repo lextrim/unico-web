@@ -5,6 +5,7 @@ import { supabase } from '../supabase';
 import AppModal from './AppModal';
 import DateTimePickerModal from './DateTimePickerModal';
 import { compressImage, createBlobUrl } from '../utils/imageUtils';
+import { toTitleCase } from '../utils/text';
 
 const NEXT_OPTIONS: Record<string, { value: string; label: string }[]> = {
   ARMANDOSE:    [{ value: 'ARMANDOSE', label: 'ARMÁNDOSE' }, { value: 'TERMINADA', label: 'TERMINADA' }, { value: 'PROGRAMADA', label: 'ENTREGAS' }, { value: 'TERMINACIONES', label: 'TERMINACIONES' }],
@@ -85,8 +86,6 @@ const FormScreen: React.FC<{ onSave?: (id: string, updated: any) => void }> = ({
       const newData = { ...prev };
       if (type === 'checkbox') {
         newData[name] = (e.target as HTMLInputElement).checked;
-      } else if (name === 'client') {
-        newData[name] = value.toUpperCase();
       } else {
         newData[name] = value;
       }
@@ -161,6 +160,7 @@ const FormScreen: React.FC<{ onSave?: (id: string, updated: any) => void }> = ({
 
       const finalPayload = {
         ...formData,
+        client: toTitleCase((formData.client || '').trim()),
         image_url: finalImageUrl,
         deliveryDatetime: newDeliveryDatetime,
         deliveryDateHistory: updatedHistory,
@@ -286,12 +286,11 @@ const FormScreen: React.FC<{ onSave?: (id: string, updated: any) => void }> = ({
               value={formData.client || ''}
               onChange={handleInputChange}
               className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-white font-bold text-sm outline-none"
-              style={{ textTransform: 'uppercase' }}
               placeholder="CLIENTE"
               autoCorrect="off"
               autoComplete="off"
               spellCheck={false}
-              autoCapitalize="characters"
+              autoCapitalize="words"
             />
 
             {/* ✅ Checkboxes SOLO si la categoría es MATERIALES */}
