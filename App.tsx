@@ -4,7 +4,7 @@ import { supabase, logActivity } from './supabase';
 import { Session } from '@supabase/supabase-js';
 import { Bell, X, WifiOff } from 'lucide-react';
 import { getIsAPK } from './utils/platform';
-import { getAutoMoveTimestamp, countWorkingDaysBeforeDelivery } from './utils/workingDays';
+import { getAutoMoveTimestamp, countWorkingDaysBeforeDelivery, isFeriaDataMissing } from './utils/workingDays';
 
 import MenuScreen from './components/MenuScreen';
 import MaterialScreen from './components/MaterialScreen';
@@ -22,6 +22,7 @@ const App: React.FC = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [deliveryAlerts, setDeliveryAlerts] = useState<Array<{ id: string; client: string; message: string }>>([]);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [feriaMissingYear, setFeriaMissingYear] = useState<number | null>(null);
   const location = useLocation();
 
   const isAPK = getIsAPK();
@@ -129,6 +130,13 @@ const App: React.FC = () => {
       window.removeEventListener('online', goOnline);
       window.removeEventListener('offline', goOffline);
     };
+  }, []);
+
+  // Avisa al admin si falta el Lunes de Feria del año actual o del siguiente en FERIA_MONDAY
+  useEffect(() => {
+    const y = new Date().getFullYear();
+    if (isFeriaDataMissing(y)) setFeriaMissingYear(y);
+    else if (isFeriaDataMissing(y + 1)) setFeriaMissingYear(y + 1);
   }, []);
 
   // Carga inicial y detecta cambios de sesión (login/logout)
@@ -351,6 +359,20 @@ const App: React.FC = () => {
             >
               <X size={15} className="text-white" />
             </button>
+          </div>
+        </div>
+      )}
+      {/* Banner de aviso: falta la fecha de Feria del año actual/siguiente en workingDays.ts */}
+      {feriaMissingYear !== null && isAdmin && session && (
+        <div
+          className="fixed left-0 right-0 z-[190] bg-orange-600 shadow-2xl"
+          style={{ top: (isOnline ? 0 : 36) + (deliveryAlerts.length > 0 ? 56 : 0) }}
+        >
+          <div className="max-w-xl mx-auto px-4 py-2 flex items-center justify-center gap-2">
+            <Bell size={14} className="text-white shrink-0" />
+            <p className="text-[11px] font-black uppercase text-white tracking-wide leading-none">
+              Falta la fecha de la Feria de {feriaMissingYear}. Avisar a Valen.
+            </p>
           </div>
         </div>
       )}

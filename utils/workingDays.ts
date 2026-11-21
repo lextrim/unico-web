@@ -27,14 +27,18 @@ function toKey(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
-// Lunes de Feria de Sevilla (hardcoded — suele ser ~2 semanas después de Semana Santa)
+// Miércoles de Feria de Sevilla: día que cierra el taller. Actualizar cada año con la fecha oficial.
 const FERIA_MONDAY: Record<number, [number, number]> = {
   2024: [4, 22],
   2025: [4, 28],
-  2026: [4, 20],
-  2027: [5, 3],
-  2028: [4, 17],
+  2026: [4, 22],
+  2027: [4, 14],
+  2028: [4, 26],
 };
+
+export function isFeriaDataMissing(year: number): boolean {
+  return !FERIA_MONDAY[year];
+}
 
 function getHolidaysForYear(year: number): Set<string> {
   const h = new Set<string>();
