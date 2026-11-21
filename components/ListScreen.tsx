@@ -47,6 +47,10 @@ const colors: Record<string, string> = {
 
 const CATEGORIES_WITH_BADGES = ['MATERIALES'];
 
+const CAT_LABEL: Record<string, string> = {
+  MATERIALES: 'Materiales', ARMANDOSE: 'Armándose', TERMINADA: 'Terminada', PROGRAMADA: 'Entregas', TERMINACIONES: 'Terminaciones',
+};
+
 // Etiqueta de urgencia para mostrar junto a la hora de entrega
 const getUrgencyLabel = (dt: string): string | null => {
   const diff = new Date(dt).getTime() - Date.now();
@@ -170,7 +174,7 @@ const ListScreen: React.FC<{ orders: any[], onDelete: (id: string) => void, isAd
   }, [data, search, isEntregas, currentCat]);
 
   return (
-    <div className="flex flex-col h-screen bg-slate-950 overflow-hidden relative">
+    <div className="flex flex-col h-screen bg-slate-950 overflow-hidden relative normal-case">
 
       {modal && <AppModal {...modal} />}
 
@@ -214,8 +218,8 @@ const ListScreen: React.FC<{ orders: any[], onDelete: (id: string) => void, isAd
         <div className="max-w-xl mx-auto px-5 py-3 flex items-center justify-between text-white">
           <div className="flex items-center gap-2">
             <button onClick={() => nav('/menu')} className="active:scale-90 transition-transform"><ChevronLeft size={28} /></button>
-            <h1 className="text-lg font-black uppercase text-white leading-none">
-              {currentCat === 'PROGRAMADA' ? 'ENTREGAS' : currentCat}
+            <h1 className="text-[17px] font-semibold text-white leading-none">
+              {CAT_LABEL[currentCat] || currentCat}
             </h1>
           </div>
         </div>
@@ -229,15 +233,15 @@ const ListScreen: React.FC<{ orders: any[], onDelete: (id: string) => void, isAd
             <input
               value={search}
               onChange={e => handleSearch(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-800 p-3 pl-10 rounded-xl text-white font-black uppercase text-xs outline-none focus:border-blue-500 transition-all"
-              placeholder="BUSCAR CLIENTE..."
+              className="w-full bg-slate-900 border border-slate-800 p-3 pl-10 rounded-xl text-white text-sm outline-none focus:border-blue-500 transition-all"
+              placeholder="Buscar cliente…"
             />
           </div>
           <button
             onClick={() => setSearch("")}
-            className="bg-red-900/20 px-4 rounded-xl text-red-500 font-black text-[10px] uppercase active:scale-90 transition-all"
+            className="bg-red-900/20 px-4 rounded-xl text-red-400 font-medium text-[12.5px] active:scale-90 transition-all"
           >
-            LIMPIAR
+            Limpiar
           </button>
         </div>
       </div>
@@ -303,7 +307,7 @@ const ListScreen: React.FC<{ orders: any[], onDelete: (id: string) => void, isAd
 
                   {/* Contenido */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-base font-black text-white uppercase truncate leading-tight">{o.client}</h3>
+                    <h3 className="text-base font-semibold text-white capitalize truncate leading-tight">{o.client}</h3>
 
                     {o.ubicado && (
                       <p className="text-[10px] text-slate-500 uppercase mt-1 truncate">

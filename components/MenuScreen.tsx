@@ -6,54 +6,64 @@ const MenuScreen: React.FC<{ isAdmin: boolean, isViewer: boolean, isAPK: boolean
   const navigate = useNavigate();
 
   const items = [
-    { label: 'Materiales', icon: Package, path: '/material', color: 'bg-blue-600' },
-    { label: 'Armándose', icon: Hammer, path: '/list/ARMANDOSE', color: 'bg-orange-600' },
-    { label: 'Terminada', icon: CheckCircle, path: '/list/TERMINADA', color: 'bg-emerald-600' },
-    { label: 'Entregas', icon: Truck, path: '/list/PROGRAMADA', color: 'bg-indigo-600' },
-    { label: 'Terminaciones', icon: AlertTriangle, path: '/list/TERMINACIONES', color: 'bg-red-600' },
-    { label: 'Informes', icon: FileText, path: '/informes', color: 'bg-slate-600' },
+    { label: 'Materiales', icon: Package, path: '/material', bg: 'bg-blue-600/15', color: 'text-blue-400' },
+    { label: 'Armándose', icon: Hammer, path: '/list/ARMANDOSE', bg: 'bg-orange-600/15', color: 'text-orange-400' },
+    { label: 'Terminada', icon: CheckCircle, path: '/list/TERMINADA', bg: 'bg-emerald-600/15', color: 'text-emerald-400' },
+    { label: 'Entregas', icon: Truck, path: '/list/PROGRAMADA', bg: 'bg-indigo-600/15', color: 'text-indigo-400' },
+    { label: 'Terminaciones', icon: AlertTriangle, path: '/list/TERMINACIONES', bg: 'bg-red-600/15', color: 'text-red-400' },
+    { label: 'Informes', icon: FileText, path: '/informes', bg: 'bg-slate-600/15', color: 'text-slate-400' },
   ];
 
   return (
     // ⚡ SOLUCIÓN: h-[100dvh] descuenta la barra de Windows. overflow-hidden mata todos los scrolls.
-    <div className="flex flex-col h-[100dvh] bg-slate-950 px-4 py-6 items-center w-full overflow-hidden">
+    <div className="flex flex-col h-[100dvh] bg-slate-950 items-center w-full overflow-hidden normal-case">
+
+      <div className="w-full max-w-xl flex items-center gap-3 px-6 pt-7 pb-2 shrink-0">
+        <div className="w-[34px] h-[34px] rounded-[10px] bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white font-bold text-[15px] shrink-0">U</div>
+        <div>
+          <div className="text-white font-bold text-[15px] leading-none">ÚNICO</div>
+          <div className="text-slate-500 text-[11px] mt-1 leading-none">Gestión de taller</div>
+        </div>
+      </div>
 
       {/* ⚡ flex-1 empuja el botón de cerrar sesión hacia abajo de forma natural y centra el menú */}
-      <div className="w-full max-w-xl flex flex-col items-center justify-center flex-1 space-y-8">
+      <div className="w-full max-w-xl flex flex-col justify-center flex-1 px-6">
 
-        <div className="w-full text-center px-2">
-          <h1 className="text-4xl font-black text-white tracking-tighter uppercase leading-none break-words">GESTION DE MATERIAL</h1>
-          {isViewer && <p className="text-slate-500 font-black uppercase text-[10px] tracking-[0.2em] mt-3">Modo Consulta</p>}
+        <div className="w-full mb-5">
+          <h1 className="text-[22px] font-semibold text-slate-200 leading-tight">Gestión de material</h1>
+          {isViewer && <p className="text-slate-500 font-medium text-xs mt-1.5">Modo consulta</p>}
         </div>
 
-        <div className="w-full grid grid-cols-2 gap-3">
+        <div className="w-full grid grid-cols-2 gap-2.5">
           {items.map((i) => (
             <button
               key={i.label}
               onClick={() => navigate(i.path)}
-              className={`${i.color} p-5 sm:py-8 rounded-3xl flex flex-col items-center justify-center gap-3 shadow-xl active:scale-95 transition-all`}
+              className="bg-slate-900 border border-slate-800 rounded-[18px] p-4 flex flex-col gap-3 items-start active:scale-95 transition-all text-left"
             >
-              <i.icon size={32} className="text-white" />
-              <span className="text-white font-black uppercase text-[10px] tracking-widest">{i.label}</span>
+              <div className={`w-10 h-10 rounded-xl ${i.bg} flex items-center justify-center`}>
+                <i.icon size={20} className={i.color} />
+              </div>
+              <span className="text-slate-200 font-medium text-sm">{i.label}</span>
             </button>
           ))}
         </div>
 
         {isAdmin && (
-          <div className="w-full flex gap-3">
+          <div className="w-full flex gap-2.5 mt-2.5">
             <button
               onClick={() => navigate('/backup')}
-              className="flex-1 bg-slate-900 p-5 rounded-3xl flex flex-row items-center justify-center gap-3 shadow-xl active:scale-95 border border-slate-800"
+              className="flex-1 bg-slate-900 border border-slate-800 rounded-2xl p-3.5 flex items-center justify-center gap-2 active:scale-95 transition-all"
             >
-              <div className="text-blue-500"><ShieldCheck size={24} /></div>
-              <span className="text-white font-black uppercase text-xs tracking-widest leading-none">Seguridad</span>
+              <ShieldCheck size={17} className="text-blue-400" />
+              <span className="text-slate-300 font-medium text-[12.5px]">Seguridad</span>
             </button>
             <button
               onClick={() => navigate('/activity')}
-              className="flex-1 bg-slate-900 p-5 rounded-3xl flex flex-row items-center justify-center gap-3 shadow-xl active:scale-95 border border-slate-800"
+              className="flex-1 bg-slate-900 border border-slate-800 rounded-2xl p-3.5 flex items-center justify-center gap-2 active:scale-95 transition-all"
             >
-              <div className="text-violet-500"><Activity size={24} /></div>
-              <span className="text-white font-black uppercase text-xs tracking-widest leading-none">Actividad</span>
+              <Activity size={17} className="text-violet-400" />
+              <span className="text-slate-300 font-medium text-[12.5px]">Actividad</span>
             </button>
           </div>
         )}
@@ -61,12 +71,12 @@ const MenuScreen: React.FC<{ isAdmin: boolean, isViewer: boolean, isAPK: boolean
       </div>
 
       {/* ⚡ El botón de salir se queda siempre visible abajo sin empujar la pantalla */}
-      <div className="w-full max-w-xl mt-4 pb-2">
+      <div className="w-full max-w-xl px-6 shrink-0">
           <button
             onClick={() => supabase.auth.signOut()}
-            className="w-full py-4 flex items-center justify-center gap-2 text-slate-600 font-black uppercase text-[10px] tracking-widest border border-slate-900 rounded-2xl active:scale-90 transition-all"
+            className="w-full py-4 flex items-center justify-center gap-2 text-slate-500 font-medium text-sm border-t border-slate-900 active:opacity-60 transition-all"
           >
-            <LogOut size={14} /> Cerrar Sesión
+            <LogOut size={14} /> Cerrar sesión
           </button>
       </div>
     </div>
