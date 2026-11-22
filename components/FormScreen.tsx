@@ -265,7 +265,7 @@ const FormScreen: React.FC<{ onSave?: (id: string, updated: any) => void }> = ({
       <div className="bg-slate-900 border-b border-slate-800 sticky top-0 z-30">
         <div className="max-w-xl mx-auto px-4 py-4 flex items-center justify-between">
           <button onClick={() => navigate(-1)} className="p-2"><ChevronLeft size={28} /></button>
-          <h1 className="text-base font-semibold truncate text-center text-slate-100">
+          <h1 className="text-lg font-semibold truncate text-center text-slate-100">
             {id ? 'Editar pedido' : `Nuevo · ${category}`}
           </h1>
           <div className="w-10"></div>

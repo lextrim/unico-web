@@ -69,7 +69,7 @@ const ActivityScreen: React.FC = () => {
 
       {/* Filtros */}
       <div className="bg-slate-950/95 backdrop-blur-md p-3 border-b border-slate-900 sticky top-[52px] z-20">
-        <div className="max-w-xl mx-auto px-2 flex gap-2">
+        <div className="max-w-xl mx-auto px-5 flex gap-2">
           {(['all', 'login', 'logout'] as const).map(f => (
             <button
               key={f}

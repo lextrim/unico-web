@@ -287,13 +287,13 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
       <div className="sticky top-0 z-30 bg-blue-600 shadow-xl">
         <div className="max-w-xl mx-auto px-5 py-4 flex items-center gap-2">
           <button onClick={() => navigate("/menu")} className="active:scale-90 transition-transform"><ChevronLeft size={28} /></button>
-          <h1 className="text-base font-semibold leading-none text-slate-100">Material</h1>
+          <h1 className="text-lg font-semibold leading-none text-slate-100">Material</h1>
         </div>
       </div>
 
       {/* Buscador */}
       <div className="bg-slate-950/95 backdrop-blur-md p-3 border-b border-slate-900 sticky top-[60px] z-20">
-        <div className="max-w-xl mx-auto px-2 space-y-2">
+        <div className="max-w-xl mx-auto px-5 space-y-2">
           <div className="flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />

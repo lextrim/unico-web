@@ -218,7 +218,7 @@ const ListScreen: React.FC<{ orders: any[], onDelete: (id: string) => void, isAd
         <div className="max-w-xl mx-auto px-5 py-3 flex items-center justify-between text-white">
           <div className="flex items-center gap-2">
             <button onClick={() => nav('/menu')} className="active:scale-90 transition-transform"><ChevronLeft size={28} /></button>
-            <h1 className="text-[17px] font-semibold text-white leading-none">
+            <h1 className="text-[19px] font-semibold text-white leading-none">
               {CAT_LABEL[currentCat] || currentCat}
             </h1>
           </div>
@@ -227,7 +227,7 @@ const ListScreen: React.FC<{ orders: any[], onDelete: (id: string) => void, isAd
 
       {/* Buscador */}
       <div className="bg-slate-950/95 backdrop-blur-md p-3 border-b border-slate-900 sticky top-[52px] z-20">
-        <div className="max-w-xl mx-auto px-2 flex gap-2">
+        <div className="max-w-xl mx-auto px-5 flex gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
             <input

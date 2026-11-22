@@ -28,20 +28,20 @@ const MenuScreen: React.FC<{ isAdmin: boolean, isViewer: boolean, isAPK: boolean
 
       <div className="w-full max-w-xl flex items-center justify-between gap-3 px-6 pt-7 pb-2 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-[34px] h-[34px] rounded-[10px] bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white font-bold text-[15px] shrink-0">U</div>
+          <div className="w-[34px] h-[34px] rounded-[10px] bg-[#c80000] flex items-center justify-center text-white font-bold text-[15px] shrink-0">U</div>
           <div>
             <div className="text-white font-bold text-[15px] leading-none">ÚNICO</div>
             <div className="text-slate-500 text-[11px] mt-1 leading-none">Gestión de taller</div>
           </div>
         </div>
-        <div className="text-slate-400 text-[15px] font-medium whitespace-nowrap">{dateLabel} · {timeLabel}</div>
+        <div className="text-slate-400 text-[17px] font-medium whitespace-nowrap">{dateLabel} · {timeLabel}</div>
       </div>
 
       {/* ⚡ flex-1 empuja el botón de cerrar sesión hacia abajo de forma natural y centra el menú */}
       <div className="w-full max-w-xl flex flex-col justify-center flex-1 px-6">
 
         <div className="w-full mb-5">
-          <h1 className="text-[22px] font-semibold text-slate-200 leading-tight">Gestión de material</h1>
+          <h1 className="text-[24px] font-semibold text-slate-200 leading-tight">Gestión de material</h1>
           {isViewer && <p className="text-slate-500 font-medium text-xs mt-1.5">Modo consulta</p>}
         </div>
 
