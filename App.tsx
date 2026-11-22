@@ -30,10 +30,15 @@ const App: React.FC = () => {
   const isAdmin = userRole === 'admin';
   const isViewer = userRole === 'viewer';
   const loadInFlight = useRef(false);
+  const reloadPending = useRef(false);
   const activeEmail = useRef<string | null>(null);
 
   const loadData = async () => {
-    if (loadInFlight.current) return;
+    // Si ya hay una carga en curso, no se descarta esta petición: se marca
+    // pendiente y se repite en cuanto termine la actual (si no, una recarga
+    // que coincide con otra en vuelo se perdía sin más, y la pantalla se
+    // quedaba con datos viejos hasta la siguiente navegación).
+    if (loadInFlight.current) { reloadPending.current = true; return; }
     loadInFlight.current = true;
     try {
       const { data: { session: cur } } = await supabase.auth.getSession();
@@ -87,7 +92,14 @@ const App: React.FC = () => {
         setUserRole(null);
       }
     } catch (e) { console.error(e); }
-    finally { setLoading(false); loadInFlight.current = false; }
+    finally {
+      setLoading(false);
+      loadInFlight.current = false;
+      if (reloadPending.current) {
+        reloadPending.current = false;
+        loadData();
+      }
+    }
   };
 
   // Detecta cambios de conectividad para avisar al usuario cuando está offline
