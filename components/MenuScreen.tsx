@@ -1,9 +1,17 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Package, Hammer, CheckCircle, Truck, AlertTriangle, FileText, ShieldCheck, Activity, LogOut } from 'lucide-react';
 import { supabase } from '../supabase';
 
 const MenuScreen: React.FC<{ isAdmin: boolean, isViewer: boolean, isAPK: boolean }> = ({ isAdmin, isViewer, isAPK }) => {
   const navigate = useNavigate();
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(interval);
+  }, []);
+  const dateLabel = now.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }).replace('.', '');
+  const timeLabel = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
 
   const items = [
     { label: 'Materiales', icon: Package, path: '/material', bg: 'bg-blue-600/15', color: 'text-blue-400' },
@@ -18,12 +26,15 @@ const MenuScreen: React.FC<{ isAdmin: boolean, isViewer: boolean, isAPK: boolean
     // ⚡ SOLUCIÓN: h-[100dvh] descuenta la barra de Windows. overflow-hidden mata todos los scrolls.
     <div className="flex flex-col h-[100dvh] bg-slate-950 items-center w-full overflow-hidden normal-case">
 
-      <div className="w-full max-w-xl flex items-center gap-3 px-6 pt-7 pb-2 shrink-0">
-        <div className="w-[34px] h-[34px] rounded-[10px] bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white font-bold text-[15px] shrink-0">U</div>
-        <div>
-          <div className="text-white font-bold text-[15px] leading-none">ÚNICO</div>
-          <div className="text-slate-500 text-[11px] mt-1 leading-none">Gestión de taller</div>
+      <div className="w-full max-w-xl flex items-center justify-between gap-3 px-6 pt-7 pb-2 shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="w-[34px] h-[34px] rounded-[10px] bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white font-bold text-[15px] shrink-0">U</div>
+          <div>
+            <div className="text-white font-bold text-[15px] leading-none">ÚNICO</div>
+            <div className="text-slate-500 text-[11px] mt-1 leading-none">Gestión de taller</div>
+          </div>
         </div>
+        <div className="text-slate-400 text-[13px] font-medium whitespace-nowrap">{dateLabel} · {timeLabel}</div>
       </div>
 
       {/* ⚡ flex-1 empuja el botón de cerrar sesión hacia abajo de forma natural y centra el menú */}
