@@ -34,7 +34,7 @@ const MenuScreen: React.FC<{ isAdmin: boolean, isViewer: boolean, isAPK: boolean
             <div className="text-slate-500 text-[11px] mt-1 leading-none">Gestión de taller</div>
           </div>
         </div>
-        <div className="text-slate-400 text-[13px] font-medium whitespace-nowrap">{dateLabel} · {timeLabel}</div>
+        <div className="text-slate-400 text-[15px] font-medium whitespace-nowrap">{dateLabel} · {timeLabel}</div>
       </div>
 
       {/* ⚡ flex-1 empuja el botón de cerrar sesión hacia abajo de forma natural y centra el menú */}
