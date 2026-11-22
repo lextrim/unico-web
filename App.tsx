@@ -147,6 +147,18 @@ const App: React.FC = () => {
     if (!loading) loadData();
   }, [location.pathname]);
 
+  // Realtime: si otro dispositivo/pestaña crea, edita o borra un material o
+  // pedido, recarga los datos aquí sin esperar a que el usuario navegue.
+  useEffect(() => {
+    if (!session) return;
+    const channel = supabase
+      .channel('unico_realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'unico_materials' }, () => loadData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'unico_orders' }, () => loadData())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [session]);
+
   // Alarmas nativas Android (funcionan con app cerrada y pantalla bloqueada)
   useEffect(() => {
     if (!isAPK || !session) return;

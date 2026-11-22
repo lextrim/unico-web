@@ -106,6 +106,15 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
 
   useEffect(() => { fetchMaterials(); }, []);
 
+  // Realtime: si otro dispositivo crea/edita/borra un material, refresca esta lista sin esperar a navegar.
+  useEffect(() => {
+    const channel = supabase
+      .channel('unico_materials_screen')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'unico_materials' }, () => fetchMaterials())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
   const resetForm = () => {
     setClient(""); setEstado(""); setRack(""); setNivel(""); setCascos(false);
     setPuertas(false); setTiradores(false); setDeliveryDate(""); setDeliveryTime(""); setNotes(""); setEditingId(null);
