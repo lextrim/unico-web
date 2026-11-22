@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UnicoWeb · Gestión de Taller de Carpintería</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #f8f9fa;
+      color: #1a1a2e;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto;
+      background: white;
+      padding: 14mm 16mm;
+    }
+
+    /* ── PORTADA ── */
+    .cover {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 297mm;
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #1d4ed8 100%);
+      color: white;
+      padding: 20mm 18mm;
+      position: relative;
+      overflow: hidden;
+    }
+    .cover::before {
+      content: '';
+      position: absolute;
+      top: -80px; right: -80px;
+      width: 400px; height: 400px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.04);
+    }
+    .cover::after {
+      content: '';
+      position: absolute;
+      bottom: -120px; left: -60px;
+      width: 500px; height: 500px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.03);
+    }
+    .cover-tag {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: #60a5fa;
+      margin-bottom: 20px;
+    }
+    .cover-title {
+      font-size: 52px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      line-height: 1.05;
+      margin-bottom: 10px;
+    }
+    .cover-subtitle {
+      font-size: 22px;
+      font-weight: 600;
+      color: #93c5fd;
+      margin-bottom: 40px;
+    }
+    .cover-desc {
+      font-size: 15px;
+      color: #cbd5e1;
+      max-width: 420px;
+      line-height: 1.7;
+      margin-bottom: 50px;
+    }
+    .cover-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .cover-pill {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 50px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .cover-footer {
+      position: absolute;
+      bottom: 18mm;
+      left: 18mm;
+      right: 18mm;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(255,255,255,0.15);
+      padding-top: 14px;
+      font-size: 11px;
+      color: #64748b;
+    }
+
+    /* ── CONTENIDO ── */
+    h2 {
+      font-size: 20px;
+      font-weight: 900;
+      color: #0f172a;
+      margin: 32px 0 14px;
+      padding-bottom: 8px;
+      border-bottom: 3px solid #1d4ed8;
+      letter-spacing: -0.3px;
+    }
+    h3 {
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #334155;
+      margin: 20px 0 8px;
+    }
+    p { margin-bottom: 10px; color: #374151; }
+
+    /* ── SECTION HEADER ── */
+    .section-intro {
+      background: #f0f7ff;
+      border-left: 4px solid #1d4ed8;
+      padding: 14px 18px;
+      border-radius: 0 10px 10px 0;
+      margin-bottom: 20px;
+      color: #1e3a5f;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    /* ── FEATURE GRID ── */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin: 16px 0;
+    }
+    .feature-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .feature-card .icon {
+      font-size: 22px;
+      margin-bottom: 8px;
+    }
+    .feature-card h4 {
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #0f172a;
+      margin-bottom: 5px;
+    }
+    .feature-card p {
+      font-size: 12px;
+      color: #64748b;
+      margin: 0;
+    }
+
+    /* ── CATEGORÍAS ── */
+    .cat-list { display: flex; flex-direction: column; gap: 10px; margin: 14px 0; }
+    .cat-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .cat-badge {
+      padding: 4px 12px;
+      border-radius: 50px;
+      font-size: 9px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: white;
+      white-space: nowrap;
+      margin-top: 2px;
+    }
+    .cat-blue    { background: #2563eb; }
+    .cat-orange  { background: #ea580c; }
+    .cat-green   { background: #16a34a; }
+    .cat-indigo  { background: #4f46e5; }
+    .cat-red     { background: #dc2626; }
+    .cat-desc { flex: 1; }
+    .cat-desc strong { font-size: 13px; font-weight: 800; color: #0f172a; display: block; margin-bottom: 3px; }
+    .cat-desc span { font-size: 12px; color: #64748b; }
+
+    /* ── FLUJO ── */
+    .flow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 16px 0;
+    }
+    .flow-step {
+      background: #f0f4ff;
+      border: 2px solid #c7d2fe;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: #312e81;
+      text-align: center;
+    }
+    .flow-arrow { color: #94a3b8; font-size: 18px; font-weight: 900; }
+
+    /* ── NOTIFICACIONES ── */
+    .notif-list { display: flex; flex-direction: column; gap: 8px; margin: 14px 0; }
+    .notif-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid;
+    }
+    .notif-item .ni-icon { font-size: 18px; }
+    .notif-item p { margin: 0; font-size: 12px; }
+    .notif-item strong { font-size: 12px; font-weight: 800; display: block; margin-bottom: 2px; }
+    .notif-blue  { background: #eff6ff; border-color: #bfdbfe; }
+    .notif-amber { background: #fffbeb; border-color: #fde68a; }
+    .notif-green { background: #f0fdf4; border-color: #bbf7d0; }
+
+    /* ── ROLES ── */
+    .roles-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+    .role-card {
+      border-radius: 12px;
+      padding: 18px;
+      border: 2px solid;
+    }
+    .role-admin { background: #fef3c7; border-color: #fcd34d; }
+    .role-viewer { background: #f0f9ff; border-color: #7dd3fc; }
+    .role-card h4 { font-size: 13px; font-weight: 900; margin-bottom: 10px; }
+    .role-admin h4 { color: #92400e; }
+    .role-viewer h4 { color: #0369a1; }
+    .role-card ul { padding-left: 16px; }
+    .role-card li { font-size: 12px; color: #374151; margin-bottom: 4px; }
+
+    /* ── DESTACADO ── */
+    .highlight {
+      background: linear-gradient(135deg, #0f172a, #1e3a5f);
+      color: white;
+      border-radius: 14px;
+      padding: 20px 22px;
+      margin: 20px 0;
+    }
+    .highlight h3 { color: #93c5fd; margin-top: 0; }
+    .highlight ul { padding-left: 18px; }
+    .highlight li { font-size: 13px; color: #cbd5e1; margin-bottom: 6px; }
+
+    /* ── LISTA SIMPLE ── */
+    ul.check-list { padding-left: 0; list-style: none; }
+    ul.check-list li { padding-left: 20px; position: relative; margin-bottom: 6px; font-size: 13px; color: #374151; }
+    ul.check-list li::before { content: '✓'; position: absolute; left: 0; color: #16a34a; font-weight: 900; }
+
+    /* ── TABLA ── */
+    table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 12px; }
+    th { background: #0f172a; color: white; padding: 10px 12px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    th:first-child { border-radius: 8px 0 0 0; }
+    th:last-child { border-radius: 0 8px 0 0; }
+    td { padding: 9px 12px; border-bottom: 1px solid #f1f5f9; color: #374151; }
+    tr:nth-child(even) td { background: #f8fafc; }
+
+    /* ── FOOTER ── */
+    .page-footer {
+      text-align: center;
+      font-size: 10px;
+      color: #94a3b8;
+      padding-top: 20px;
+      border-top: 1px solid #e2e8f0;
+      margin-top: 40px;
+    }
+
+    /* ── PRINT ── */
+    @media print {
+      body { background: white; }
+      .page { margin: 0; padding: 12mm 14mm; width: 100%; }
+      .cover { min-height: 100vh; page-break-after: always; }
+      h2 { page-break-before: auto; }
+      .feature-grid, .roles-grid { page-break-inside: avoid; }
+      .cat-item, .notif-item, .flow { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════ PORTADA ══════════════════════ -->
+<div class="cover">
+  <div class="cover-tag">Aplicación para talleres de carpintería</div>
+  <div class="cover-title">UnicoWeb</div>
+  <div class="cover-subtitle">Gestión integral de producción y entregas</div>
+  <p class="cover-desc">
+    Aplicación Android diseñada para talleres de carpintería que necesitan controlar
+    el estado de sus pedidos, desde la llegada del material hasta la entrega al cliente,
+    con seguimiento en tiempo real y notificaciones automáticas.
+  </p>
+  <div class="cover-pills">
+    <span class="cover-pill">Android APK</span>
+    <span class="cover-pill">Tiempo real</span>
+    <span class="cover-pill">Notificaciones</span>
+    <span class="cover-pill">Multi-usuario</span>
+    <span class="cover-pill">Sin papel</span>
+    <span class="cover-pill">Festivos Andalucía</span>
+  </div>
+  <div class="cover-footer">
+    <span>UnicoWeb · Gestión de taller</span>
+    <span>Documentación de producto · 2026</span>
+  </div>
+</div>
+
+<!-- ══════════════════════ PÁGINA 2 ══════════════════════ -->
+<div class="page">
+
+  <!-- ── ¿QUÉ ES? ── -->
+  <h2>¿Qué es UnicoWeb?</h2>
+  <div class="section-intro">
+    UnicoWeb es una aplicación Android para talleres de carpintería que permite gestionar
+    el ciclo completo de un pedido: desde que llega el material al taller hasta que se entrega
+    al cliente. Sustituye las hojas de papel, las pizarras y los grupos de WhatsApp por
+    una herramienta clara, rápida y siempre disponible.
+  </div>
+
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="icon">📦</div>
+      <h4>Control total del pedido</h4>
+      <p>Cada pedido tiene su propia ficha con foto, notas y fecha de entrega. Sabes en todo momento en qué estado está cada trabajo.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🔔</div>
+      <h4>Alertas automáticas</h4>
+      <p>La app avisa con antelación cuándo hay que empezar a armar un pedido y cuándo es la hora de la entrega, aunque la app esté cerrada.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">👥</div>
+      <h4>Multi-usuario</h4>
+      <p>Varios trabajadores pueden consultar el estado desde sus móviles. Solo el administrador puede añadir o modificar registros.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🗓️</div>
+      <h4>Días laborables reales</h4>
+      <p>Calcula los días que quedan descontando fines de semana, festivos nacionales, festivos de Andalucía y la Feria de Sevilla.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🔍</div>
+      <h4>Búsqueda cruzada</h4>
+      <p>Busca un cliente en Material y la app te dice si ya está en otra categoría, con acceso directo a su ficha.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">📸</div>
+      <h4>Foto por pedido</h4>
+      <p>Adjunta una foto del trabajo o del material para que cualquier operario lo identifique al instante.</p>
+    </div>
+  </div>
+
+  <!-- ── FLUJO DE TRABAJO ── -->
+  <h2>Flujo de trabajo</h2>
+  <p>Cada pedido sigue un recorrido natural por las categorías del taller:</p>
+
+  <div class="flow">
+    <div class="flow-step">📦<br/>Material</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">🔧<br/>Armándose</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">✅<br/>Terminada</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">🚚<br/>Entregas</div>
+  </div>
+  <p style="font-size:12px;color:#64748b;margin-top:6px;">También existe la categoría <strong>Terminaciones</strong> para trabajos que requieren un acabado adicional antes de la entrega.</p>
+
+  <!-- ── CATEGORÍAS ── -->
+  <h2>Categorías del taller</h2>
+  <div class="cat-list">
+    <div class="cat-item">
+      <span class="cat-badge cat-blue">Material</span>
+      <div class="cat-desc">
+        <strong>Materiales pendientes de fabricar</strong>
+        <span>Pedidos que han llegado al taller y están esperando entrar en producción. Se puede indicar si ya tiene cascos, puertas o tiradores disponibles, la ubicación en el rack y la fecha de entrega.</span>
+      </div>
+    </div>
+    <div class="cat-item">
+      <span class="cat-badge cat-orange">Armándose</span>
+      <div class="cat-desc">
+        <strong>En proceso de fabricación</strong>
+        <span>Pedidos que ya están siendo trabajados en el taller. La app puede mover automáticamente los pedidos aquí cuando quedan 4 días laborables para la entrega.</span>
+      </div>
+    </div>
+    <div class="cat-item">
+      <span class="cat-badge cat-green">Terminada</span>
+      <div class="cat-desc">
+        <strong>Fabricación completada</strong>
+        <span>El mueble está listo. Se puede registrar la fecha de entrega para planificar la logística.</span>
+      </div>
+    </div>
+    <div class="cat-item">
+      <span class="cat-badge cat-indigo">Entregas</span>
+      <div class="cat-desc">
+        <strong>Programados para entregar</strong>
+        <span>Pedidos con fecha y hora de entrega asignada. Ordenados automáticamente por proximidad. La app avisa 30 minutos antes y en el momento exacto de la entrega.</span>
+      </div>
+    </div>
+    <div class="cat-item">
+      <span class="cat-badge cat-red">Terminaciones</span>
+      <div class="cat-desc">
+        <strong>Acabados finales pendientes</strong>
+        <span>Pedidos que necesitan un trabajo adicional (lacado, barniz, herrajes…) antes de poder entregarse.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer">UnicoWeb · Gestión de taller de carpintería · Pág. 1</div>
+</div>
+
+<!-- ══════════════════════ PÁGINA 3 ══════════════════════ -->
+<div class="page">
+
+  <!-- ── AUTOMATIZACIÓN ── -->
+  <h2>Automatización y fechas de entrega</h2>
+  <div class="section-intro">
+    El módulo de fechas inteligentes es uno de los puntos más potentes de la aplicación.
+    No solo muestra la fecha de entrega — calcula cuántos días laborables quedan teniendo
+    en cuenta el calendario real de trabajo.
+  </div>
+
+  <h3>Contador de días laborables</h3>
+  <p>Para cada pedido con fecha de entrega, la app muestra cuántos días laborables quedan. El cálculo excluye:</p>
+  <ul class="check-list">
+    <li>Sábados y domingos</li>
+    <li>Festivos nacionales españoles</li>
+    <li>Festivos de la Comunidad Autónoma de Andalucía</li>
+    <li>Semana Santa (Jueves y Viernes Santo)</li>
+    <li>Feria de Sevilla (configurable por año)</li>
+    <li>El propio día de entrega (no cuenta como día de trabajo disponible)</li>
+  </ul>
+
+  <h3>Código de colores por urgencia</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Color</th>
+        <th>Días laborables restantes</th>
+        <th>Significado</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>🟢 Verde</td><td>Más de 4 días</td><td>Sin urgencia, tiempo suficiente</td></tr>
+      <tr><td>🟡 Ámbar</td><td>3 – 4 días</td><td>Atención, plazo ajustado</td></tr>
+      <tr><td>🔴 Rojo claro</td><td>1 – 2 días</td><td>Urgente, hay que actuar hoy</td></tr>
+      <tr><td>🔴 Rojo oscuro</td><td>0 o negativo</td><td>Plazo vencido</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Movimiento automático a Armándose</h3>
+  <p>
+    Cuando a un pedido en Material le quedan exactamente 4 días laborables para la entrega,
+    la app lo mueve automáticamente a la categoría <strong>Armándose</strong> sin ninguna
+    intervención manual. Esto garantiza que el taller siempre tiene tiempo suficiente para fabricar.
+  </p>
+
+  <h3>Historial de fechas de entrega</h3>
+  <p>Si la fecha de entrega de un pedido cambia, la app guarda un historial con la fecha anterior
+  y cuándo fue modificada. Útil para tener trazabilidad ante reclamaciones de clientes.</p>
+
+  <!-- ── NOTIFICACIONES ── -->
+  <h2>Sistema de notificaciones</h2>
+  <p>La app envía alertas automáticas en tres situaciones distintas, tanto dentro de la app como en el sistema Android:</p>
+
+  <div class="notif-list">
+    <div class="notif-item notif-blue">
+      <div class="ni-icon">🔧</div>
+      <div>
+        <strong>Pedido pasa a Armándose</strong>
+        <p>A las 7:00 h del día en que un pedido entra en el umbral de 4 días laborables, se recibe una notificación en el móvil aunque la app esté cerrada o la pantalla bloqueada.</p>
+      </div>
+    </div>
+    <div class="notif-item notif-amber">
+      <div class="ni-icon">⏰</div>
+      <div>
+        <strong>30 minutos antes de la entrega</strong>
+        <p>Para los pedidos en la categoría Entregas con hora asignada, la app avisa media hora antes para que el equipo de reparto pueda prepararse con tiempo.</p>
+      </div>
+    </div>
+    <div class="notif-item notif-green">
+      <div class="ni-icon">🚚</div>
+      <div>
+        <strong>Hora exacta de entrega</strong>
+        <p>En el momento en que llega la hora programada, se dispara otra notificación como recordatorio final. Funciona también con la app en segundo plano.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ROLES ── -->
+  <h2>Roles de usuario</h2>
+  <p>La aplicación tiene dos niveles de acceso gestionados por correo electrónico:</p>
+
+  <div class="roles-grid">
+    <div class="role-card role-admin">
+      <h4>👑 Administrador</h4>
+      <ul>
+        <li>Crear y editar pedidos</li>
+        <li>Mover pedidos entre categorías</li>
+        <li>Borrar registros</li>
+        <li>Añadir fotos y notas</li>
+        <li>Asignar fechas de entrega</li>
+        <li>Acceder a informes y backups</li>
+        <li>Ver el registro de actividad</li>
+      </ul>
+    </div>
+    <div class="role-card role-viewer">
+      <h4>👁️ Visualizador</h4>
+      <ul>
+        <li>Ver el estado de todos los pedidos</li>
+        <li>Consultar fotos y notas</li>
+        <li>Buscar clientes</li>
+        <li>Acceder a informes</li>
+        <li>Recibir notificaciones de entrega</li>
+      </ul>
+    </div>
+  </div>
+
+  <p style="font-size:12px;color:#64748b;">El administrador gestiona los accesos desde el panel. Cualquier correo electrónico no autorizado es rechazado automáticamente.</p>
+
+  <div class="page-footer">UnicoWeb · Gestión de taller de carpintería · Pág. 2</div>
+</div>
+
+<!-- ══════════════════════ PÁGINA 4 ══════════════════════ -->
+<div class="page">
+
+  <!-- ── FICHA DE PEDIDO ── -->
+  <h2>Ficha de pedido</h2>
+  <p>Cada registro almacena toda la información relevante del pedido en un único lugar:</p>
+
+  <table>
+    <thead>
+      <tr><th>Campo</th><th>Descripción</th><th>Disponible en</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Cliente</strong></td><td>Nombre del cliente (en mayúsculas para facilitar la lectura)</td><td>Todas las categorías</td></tr>
+      <tr><td><strong>Foto</strong></td><td>Imagen del trabajo o del material, comprimida automáticamente</td><td>Todas las categorías</td></tr>
+      <tr><td><strong>Notas</strong></td><td>Observaciones libres sobre el pedido</td><td>Todas las categorías</td></tr>
+      <tr><td><strong>Fecha de entrega</strong></td><td>Fecha y hora acordada con el cliente</td><td>Armándose, Terminada, Entregas, Terminaciones</td></tr>
+      <tr><td><strong>Cascos / Puertas / Tiradores</strong></td><td>Indicadores visuales de materiales disponibles</td><td>Material</td></tr>
+      <tr><td><strong>Rack / Nivel</strong></td><td>Ubicación física del material en el almacén</td><td>Material</td></tr>
+      <tr><td><strong>Historial de fechas</strong></td><td>Registro de cambios de fecha de entrega con timestamps</td><td>Cuando se modifica la fecha</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ── BÚSQUEDA ── -->
+  <h2>Búsqueda inteligente</h2>
+
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="icon">🔍</div>
+      <h4>Búsqueda en Material</h4>
+      <p>Busca por nombre de cliente o ubicación de rack. Filtra también por materiales disponibles (solo cascos, solo puertas…).</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🗂️</div>
+      <h4>Búsqueda cruzada</h4>
+      <p>Si el cliente buscado no está en Material pero sí en otra categoría, la app lo muestra con un botón de acceso directo a esa lista.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">📋</div>
+      <h4>Búsqueda por categoría</h4>
+      <p>En cada pantalla de categoría hay un buscador para filtrar por nombre de cliente dentro de esa sección específica.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🚫</div>
+      <h4>Detección de duplicados</h4>
+      <p>Al crear un registro, la app comprueba automáticamente si el cliente ya existe en cualquier categoría activa y avisa antes de guardar.</p>
+    </div>
+  </div>
+
+  <!-- ── INFORMES ── -->
+  <h2>Informes</h2>
+  <p>
+    La sección de informes permite generar listados del estado actual del taller, diseñados
+    para ser impresos directamente desde el móvil o compartidos como PDF. Incluyen todos
+    los pedidos de cada categoría con su información relevante.
+  </p>
+
+  <!-- ── TÉCNICO ── -->
+  <h2>Aspectos técnicos destacados</h2>
+
+  <div class="highlight">
+    <h3>Tecnología</h3>
+    <ul>
+      <li><strong>Aplicación Android nativa (APK)</strong> — Se instala directamente en el móvil, funciona sin navegador.</li>
+      <li><strong>Base de datos en la nube (Supabase)</strong> — Los datos se sincronizan en tiempo real entre todos los dispositivos conectados.</li>
+      <li><strong>Notificaciones del sistema Android</strong> — Funcionan aunque la app esté cerrada o la pantalla bloqueada, usando alarmas nativas del sistema.</li>
+      <li><strong>Actualización instantánea</strong> — Al guardar o mover un pedido, la lista se actualiza de inmediato sin esperar una recarga completa.</li>
+      <li><strong>Sin límite de usuarios visualizadores</strong> — Varios operarios pueden consultar el estado al mismo tiempo.</li>
+      <li><strong>Almacenamiento de imágenes en la nube</strong> — Las fotos se comprimen automáticamente y se almacenan de forma permanente.</li>
+    </ul>
+  </div>
+
+  <!-- ── RESUMEN ── -->
+  <h2>¿Por qué UnicoWeb?</h2>
+
+  <table>
+    <thead>
+      <tr><th>Sin UnicoWeb</th><th>Con UnicoWeb</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Pizarras y papeles que se pierden o borran</td><td>Toda la información en el móvil, siempre disponible</td></tr>
+      <tr><td>Llamadas y mensajes para saber el estado de un pedido</td><td>Cada operario consulta el estado en su propio móvil</td></tr>
+      <tr><td>Olvidar empezar un pedido a tiempo</td><td>Alerta automática 4 días antes para no llegar tarde</td></tr>
+      <tr><td>Perder la hora de entrega de un cliente</td><td>Notificación 30 minutos antes y en el momento exacto</td></tr>
+      <tr><td>No saber dónde está un material en el almacén</td><td>Rack y nivel registrados en cada ficha</td></tr>
+      <tr><td>Discusiones sobre cuándo cambió la fecha de entrega</td><td>Historial completo de cambios de fecha con timestamps</td></tr>
+    </tbody>
+  </table>
+
+  <div class="page-footer">UnicoWeb · Gestión de taller de carpintería · Pág. 3</div>
+</div>
+
+</body>
+</html>
