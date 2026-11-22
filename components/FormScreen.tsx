@@ -37,10 +37,10 @@ function loadFreshDraft(key: string): any | null {
 }
 
 const NEXT_OPTIONS: Record<string, { value: string; label: string }[]> = {
-  ARMANDOSE:    [{ value: 'ARMANDOSE', label: 'ARMÁNDOSE' }, { value: 'TERMINADA', label: 'TERMINADA' }, { value: 'PROGRAMADA', label: 'ENTREGAS' }, { value: 'TERMINACIONES', label: 'TERMINACIONES' }],
-  TERMINADA:    [{ value: 'TERMINADA', label: 'TERMINADA' }, { value: 'PROGRAMADA', label: 'ENTREGAS' }, { value: 'TERMINACIONES', label: 'TERMINACIONES' }],
-  PROGRAMADA:   [{ value: 'PROGRAMADA', label: 'ENTREGAS' }, { value: 'TERMINACIONES', label: 'TERMINACIONES' }],
-  TERMINACIONES:[{ value: 'TERMINACIONES', label: 'TERMINACIONES' }],
+  ARMANDOSE:    [{ value: 'ARMANDOSE', label: 'Armándose' }, { value: 'TERMINADA', label: 'Terminada' }, { value: 'PROGRAMADA', label: 'Entregas' }, { value: 'TERMINACIONES', label: 'Terminaciones' }],
+  TERMINADA:    [{ value: 'TERMINADA', label: 'Terminada' }, { value: 'PROGRAMADA', label: 'Entregas' }, { value: 'TERMINACIONES', label: 'Terminaciones' }],
+  PROGRAMADA:   [{ value: 'PROGRAMADA', label: 'Entregas' }, { value: 'TERMINACIONES', label: 'Terminaciones' }],
+  TERMINACIONES:[{ value: 'TERMINACIONES', label: 'Terminaciones' }],
 };
 
 // ─── FormScreen ────────────────────────────────────────────────────────────────
@@ -236,7 +236,7 @@ const FormScreen: React.FC<{ onSave?: (id: string, updated: any) => void }> = ({
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-950 text-white w-full">
+    <div className="flex flex-col min-h-screen bg-slate-950 text-white w-full normal-case">
 
       {modal && <AppModal {...modal} />}
       {showDeliveryModal && (
@@ -265,8 +265,8 @@ const FormScreen: React.FC<{ onSave?: (id: string, updated: any) => void }> = ({
       <div className="bg-slate-900 border-b border-slate-800 sticky top-0 z-30">
         <div className="max-w-xl mx-auto px-4 py-4 flex items-center justify-between">
           <button onClick={() => navigate(-1)} className="p-2"><ChevronLeft size={28} /></button>
-          <h1 className="text-lg font-black uppercase tracking-widest truncate text-center">
-            {id ? 'Editar Pedido' : `Nuevo · ${category}`}
+          <h1 className="text-base font-semibold truncate text-center text-slate-100">
+            {id ? 'Editar pedido' : `Nuevo · ${category}`}
           </h1>
           <div className="w-10"></div>
         </div>
@@ -302,13 +302,13 @@ const FormScreen: React.FC<{ onSave?: (id: string, updated: any) => void }> = ({
 
             {/* Estado */}
             <div>
-              <label className="block text-[10px] font-black uppercase text-slate-500 mb-2 ml-2">Mover a Estado:</label>
+              <label className="block text-[12px] font-medium text-slate-500 mb-2 ml-2">Mover a estado</label>
               <div className="relative">
                 <select
                   name="category"
                   value={formData.category || ''}
                   onChange={handleInputChange}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 pr-10 text-white font-bold text-sm outline-none appearance-none focus:border-blue-500 transition-all"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 pr-10 text-slate-200 font-medium text-sm outline-none appearance-none focus:border-blue-500 transition-all"
                 >
                   {(NEXT_OPTIONS[category?.toUpperCase() || ''] || []).map(opt => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -324,8 +324,8 @@ const FormScreen: React.FC<{ onSave?: (id: string, updated: any) => void }> = ({
               name="client"
               value={formData.client || ''}
               onChange={handleInputChange}
-              className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-white font-bold text-sm outline-none"
-              placeholder="CLIENTE"
+              className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-white font-medium text-sm outline-none"
+              placeholder="Cliente"
               autoCorrect="off"
               autoComplete="off"
               spellCheck={false}
@@ -334,18 +334,22 @@ const FormScreen: React.FC<{ onSave?: (id: string, updated: any) => void }> = ({
 
             {/* ✅ Checkboxes SOLO si la categoría es MATERIALES */}
             {showBadgeFields && (
-              <div className="flex gap-3">
-                {['cascos', 'puertas', 'tiradores'].map(f => (
-                  <label key={f} className="flex items-center gap-2 bg-slate-950 p-3 rounded-xl border border-slate-800 flex-1 justify-center">
-                    <input
-                      type="checkbox"
-                      name={f}
-                      checked={formData[f] || false}
-                      onChange={handleInputChange}
-                      className="w-5 h-5 accent-blue-600"
-                    />
-                    <span className="text-[10px] font-black uppercase text-slate-400">{f}</span>
-                  </label>
+              <div className="flex gap-2">
+                {[{ key: 'cascos', label: 'Cascos' }, { key: 'puertas', label: 'Puertas' }, { key: 'tiradores', label: 'Tiradores' }].map(f => (
+                  <button
+                    type="button"
+                    key={f.key}
+                    onClick={() => setFormData((p: any) => {
+                      const updated = { ...p, [f.key]: !p[f.key] };
+                      saveDraft(draftKey, updated);
+                      return updated;
+                    })}
+                    className={`flex-1 rounded-xl p-3 text-center font-medium text-[12.5px] border transition-all active:scale-95 ${
+                      formData[f.key] ? 'bg-blue-600/15 border-blue-500/40 text-blue-300' : 'bg-slate-950 border-slate-800 text-slate-400'
+                    }`}
+                  >
+                    {f.label}
+                  </button>
                 ))}
               </div>
             )}
@@ -355,43 +359,43 @@ const FormScreen: React.FC<{ onSave?: (id: string, updated: any) => void }> = ({
               name="notes"
               value={formData.notes || ''}
               onChange={handleInputChange}
-              placeholder="NOTAS..."
+              placeholder="Notas…"
               rows={3}
-              className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-white font-bold text-sm resize-none outline-none"
+              className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-white font-medium text-sm resize-none outline-none"
             />
 
             {/* Campo fecha/hora — abre modal personalizado */}
             {isEditingEntregas && (
               <div className="space-y-2">
-                <label className="block text-[10px] font-black uppercase text-slate-500 ml-2 flex items-center gap-2">
+                <label className="block text-[12px] font-medium text-slate-500 ml-2 flex items-center gap-2">
                   <Clock size={12} className="text-indigo-400" />
                   Fecha y hora de entrega
                 </label>
                 <button
                   type="button"
                   onClick={() => setShowInlineDateModal(true)}
-                  className="w-full bg-slate-950 border border-indigo-500/30 rounded-2xl p-4 text-left font-bold text-sm outline-none active:border-indigo-500 transition-all"
+                  className="w-full bg-slate-950 border border-indigo-500/30 rounded-2xl p-4 text-left font-medium text-sm outline-none active:border-indigo-500 transition-all"
                 >
                   {formData.deliveryDatetime
                     ? <span className="text-white">{new Date(formData.deliveryDatetime).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                    : <span className="text-slate-500">Toca para seleccionar fecha...</span>
+                    : <span className="text-slate-500">Toca para seleccionar fecha…</span>
                   }
                 </button>
                 {formData.deliveryDatetime && (
                   <button
                     type="button"
                     onClick={() => setFormData((p: any) => ({ ...p, deliveryDatetime: '' }))}
-                    className="text-slate-500 text-[10px] font-black uppercase ml-2 active:scale-90 transition-all"
+                    className="text-slate-500 text-[12px] font-medium ml-2 active:scale-90 transition-all"
                   >
                     Quitar fecha
                   </button>
                 )}
                 {(formData.deliveryDateHistory?.length > 0) && (
                   <div className="mt-3 bg-slate-950 border border-slate-800 rounded-2xl p-3 space-y-1">
-                    <p className="text-[10px] font-black uppercase text-slate-500 mb-2">Historial de fechas anteriores</p>
+                    <p className="text-[12px] font-medium text-slate-500 mb-2">Historial de fechas anteriores</p>
                     {[...(formData.deliveryDateHistory as { date: string; changedAt: string }[])].reverse().map((entry, i) => (
                       <div key={i} className="flex justify-between items-center text-[11px]">
-                        <span className="text-slate-300 font-bold">
+                        <span className="text-slate-300 font-medium">
                           {new Date(entry.date).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                         </span>
                         <span className="text-slate-600">
@@ -409,10 +413,10 @@ const FormScreen: React.FC<{ onSave?: (id: string, updated: any) => void }> = ({
           <button
             type="submit"
             disabled={loading || saved}
-            className={`w-full text-white font-black uppercase py-5 rounded-2xl flex items-center justify-center gap-3 active:scale-95 transition-all shadow-xl ${saved ? 'bg-emerald-600' : 'bg-blue-600'}`}
+            className={`w-full text-white font-semibold py-5 rounded-2xl flex items-center justify-center gap-3 active:scale-95 transition-all shadow-xl ${saved ? 'bg-emerald-600' : 'bg-blue-600'}`}
           >
-            {saved ? '✓ GUARDADO' : loading ? <Loader2 className="animate-spin" /> : <Save size={20} />}
-            {!saved && (id ? 'GUARDAR CAMBIOS' : 'CREAR REGISTRO')}
+            {saved ? '✓ Guardado' : loading ? <Loader2 className="animate-spin" /> : <Save size={20} />}
+            {!saved && (id ? 'Guardar cambios' : 'Crear registro')}
           </button>
         </form>
       </div>

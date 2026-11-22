@@ -248,7 +248,7 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
   }, [filtered]);
 
   return (
-    <div className="flex flex-col h-screen bg-slate-950 text-white overflow-hidden relative">
+    <div className="flex flex-col h-screen bg-slate-950 text-white overflow-hidden relative normal-case">
       {modal && <AppModal {...modal} />}
       {showDatePicker && (
         <DateTimePickerModal
@@ -287,7 +287,7 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
       <div className="sticky top-0 z-30 bg-blue-600 shadow-xl">
         <div className="max-w-xl mx-auto px-5 py-4 flex items-center gap-2">
           <button onClick={() => navigate("/menu")} className="active:scale-90 transition-transform"><ChevronLeft size={28} /></button>
-          <h1 className="text-lg font-black uppercase tracking-widest leading-none text-white">Material</h1>
+          <h1 className="text-base font-semibold leading-none text-slate-100">Material</h1>
         </div>
       </div>
 
@@ -300,24 +300,24 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 p-3 pl-10 rounded-xl text-white font-black uppercase text-xs outline-none focus:border-blue-500 transition-all"
-                placeholder="BUSCAR CLIENTE..."
+                className="w-full bg-slate-900 border border-slate-800 p-3 pl-10 rounded-xl text-white text-sm outline-none focus:border-blue-500 transition-all"
+                placeholder="Buscar cliente…"
               />
             </div>
-            <button onClick={() => { setSearch(""); setFilterCascos(false); setFilterPuertas(false); }} className="bg-red-900/20 px-4 rounded-xl text-red-500 font-black text-[10px] uppercase active:scale-90 transition-all">LIMPIAR</button>
+            <button onClick={() => { setSearch(""); setFilterCascos(false); setFilterPuertas(false); }} className="bg-red-900/20 px-4 rounded-xl text-red-400 font-medium text-[12.5px] active:scale-90 transition-all">Limpiar</button>
           </div>
           <div className="flex gap-2">
             <button
               onClick={() => setFilterCascos(v => !v)}
-              className={`flex-1 py-2 rounded-xl font-black text-[10px] uppercase border transition-all active:scale-95 ${filterCascos ? BADGE_COLORS.cascos.on + ' border-blue-500/40' : 'bg-slate-900 border-slate-800 text-slate-500'}`}
+              className={`flex-1 py-2 rounded-xl font-medium text-[12.5px] border transition-all active:scale-95 ${filterCascos ? BADGE_COLORS.cascos.on + ' border-blue-500/40' : 'bg-slate-900 border-slate-800 text-slate-400'}`}
             >
-              CASCOS
+              Cascos
             </button>
             <button
               onClick={() => setFilterPuertas(v => !v)}
-              className={`flex-1 py-2 rounded-xl font-black text-[10px] uppercase border transition-all active:scale-95 ${filterPuertas ? BADGE_COLORS.puertas.on + ' border-emerald-500/40' : 'bg-slate-900 border-slate-800 text-slate-500'}`}
+              className={`flex-1 py-2 rounded-xl font-medium text-[12.5px] border transition-all active:scale-95 ${filterPuertas ? BADGE_COLORS.puertas.on + ' border-emerald-500/40' : 'bg-slate-900 border-slate-800 text-slate-400'}`}
             >
-              PUERTAS
+              Puertas
             </button>
           </div>
         </div>
@@ -332,8 +332,8 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
             <input
               value={client}
               onChange={e => setClient(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-white font-black outline-none focus:border-blue-500 transition-all"
-              placeholder="CLIENTE"
+              className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-white font-medium outline-none focus:border-blue-500 transition-all"
+              placeholder="Cliente"
               autoCorrect="off"
               autoComplete="off"
               spellCheck={false}
@@ -343,8 +343,8 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
             {/* Foto */}
             <div className="flex gap-2">
               <div className="flex-1 relative bg-slate-900 border border-slate-800 rounded-xl p-4 flex items-center justify-center gap-3 active:bg-slate-800 transition-all">
-                <Camera size={20} />
-                <span className="text-[10px] font-black uppercase">Subir Foto</span>
+                <Camera size={18} className="text-slate-300" />
+                <span className="text-[12.5px] font-medium text-slate-300">Subir foto</span>
                 <input
                   type="file"
                   onChange={e => {
@@ -367,22 +367,22 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
             <select
               value={estado}
               onChange={e => setEstado(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-white font-black uppercase outline-none transition-all"
+              className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-slate-200 font-medium outline-none transition-all"
             >
-              <option value="">MATERIAL</option>
-              <option value="ARMANDOSE">ARMÁNDOSE</option>
-              <option value="TERMINADA">TERMINADA</option>
-              <option value="PROGRAMADA">ENTREGAS</option>
-              <option value="TERMINACIONES">TERMINACIONES</option>
+              <option value="">Material</option>
+              <option value="ARMANDOSE">Armándose</option>
+              <option value="TERMINADA">Terminada</option>
+              <option value="PROGRAMADA">Entregas</option>
+              <option value="TERMINACIONES">Terminaciones</option>
             </select>
 
             {/* Fecha de entrega */}
             <div className="space-y-1">
               <div className="flex items-center justify-between px-1">
-                <label className="text-[10px] font-black uppercase text-slate-500">Fecha de entrega</label>
+                <label className="text-[11.5px] font-medium text-slate-500">Fecha de entrega</label>
                 {deliveryDate && (
-                  <button onClick={() => { setDeliveryDate(""); setDeliveryTime(""); }} className="text-[9px] font-black uppercase text-red-400 active:scale-90 transition-all">
-                    QUITAR
+                  <button onClick={() => { setDeliveryDate(""); setDeliveryTime(""); }} className="text-[11.5px] font-medium text-red-400 active:scale-90 transition-all">
+                    Quitar
                   </button>
                 )}
               </div>
@@ -393,63 +393,63 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
               >
                 {deliveryDate ? (
                   <div className="flex items-center gap-3">
-                    <span className="text-white font-black text-sm">
+                    <span className="text-white font-medium text-sm">
                       {new Date(deliveryDate + 'T12:00').toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                     </span>
-                    <span className="text-slate-400 font-black text-sm">{deliveryTime || '00:00'}</span>
+                    <span className="text-slate-400 font-medium text-sm">{deliveryTime || '00:00'}</span>
                   </div>
                 ) : (
-                  <span className="text-slate-600 font-black text-sm uppercase">Seleccionar fecha y hora</span>
+                  <span className="text-slate-500 font-medium text-sm">Seleccionar fecha y hora</span>
                 )}
                 <ChevronRight size={16} className="text-slate-500" />
               </button>
             </div>
 
-            {/* Checkboxes */}
+            {/* Chips seleccionables */}
             <div className="grid grid-cols-3 gap-2">
-              {['CASCOS', 'PUERTAS', 'TIRADORES'].map(f => (
-                <label key={f} className="bg-slate-900 border border-slate-800 rounded-xl p-3 flex flex-col items-center gap-2 cursor-pointer active:bg-slate-800 transition-all">
-                  <span className="text-[10px] font-black uppercase">{f}</span>
-                  <input
-                    type="checkbox"
-                    checked={f === 'CASCOS' ? cascos : f === 'PUERTAS' ? puertas : tiradores}
-                    onChange={e => {
-                      const c = e.target.checked;
-                      if (f === 'CASCOS') setCascos(c);
-                      else if (f === 'PUERTAS') setPuertas(c);
-                      else setTiradores(c);
-                    }}
-                    className="h-4 w-4 accent-blue-500"
-                  />
-                </label>
+              {([
+                { key: 'CASCOS', label: 'Cascos', checked: cascos, set: setCascos },
+                { key: 'PUERTAS', label: 'Puertas', checked: puertas, set: setPuertas },
+                { key: 'TIRADORES', label: 'Tiradores', checked: tiradores, set: setTiradores },
+              ] as const).map(f => (
+                <button
+                  type="button"
+                  key={f.key}
+                  onClick={() => f.set(v => !v)}
+                  className={`rounded-xl p-3 text-center font-medium text-[12.5px] border transition-all active:scale-95 ${
+                    f.checked ? 'bg-blue-600/15 border-blue-500/40 text-blue-300' : 'bg-slate-900 border-slate-800 text-slate-400'
+                  }`}
+                >
+                  {f.label}
+                </button>
               ))}
             </div>
 
             {/* Rack / Nivel */}
             <div className="grid grid-cols-2 gap-2">
-              <input type="number" inputMode="numeric" value={rack} onChange={e => setRack(e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-white font-black outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" placeholder="RACK" />
-              <input type="number" inputMode="numeric" value={nivel} onChange={e => setNivel(e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-white font-black outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" placeholder="NIVEL" />
+              <input type="number" inputMode="numeric" value={rack} onChange={e => setRack(e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-white font-medium outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" placeholder="Rack" />
+              <input type="number" inputMode="numeric" value={nivel} onChange={e => setNivel(e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-white font-medium outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" placeholder="Nivel" />
             </div>
 
             {/* ✅ FIX: Campo Notas — antes no existía en el JSX */}
             <textarea
               value={notes}
               onChange={e => setNotes(e.target.value)}
-              placeholder="NOTAS..."
+              placeholder="Notas…"
               rows={3}
-              className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-white font-black uppercase text-sm resize-none outline-none focus:border-blue-500 transition-all"
+              className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-white font-medium text-sm resize-none outline-none focus:border-blue-500 transition-all"
             />
 
             <button
               onClick={onSave}
               disabled={isUploading}
-              className="w-full bg-blue-600 py-5 rounded-2xl text-base font-black uppercase text-white shadow-xl active:scale-95 transition-all"
+              className="w-full bg-blue-600 py-5 rounded-2xl text-base font-semibold text-white shadow-xl active:scale-95 transition-all"
             >
-              {isUploading ? <Loader2 className="animate-spin mx-auto text-white" /> : (editingId ? "ACTUALIZAR" : "GUARDAR")}
+              {isUploading ? <Loader2 className="animate-spin mx-auto text-white" /> : (editingId ? "Actualizar" : "Guardar")}
             </button>
             {editingId && (
-              <button onClick={resetForm} className="w-full bg-slate-800 py-3 rounded-xl font-black uppercase text-[10px] active:scale-95 transition-all text-slate-400">
-                CANCELAR EDICIÓN
+              <button onClick={resetForm} className="w-full bg-slate-800 py-3 rounded-xl font-medium text-[12.5px] active:scale-95 transition-all text-slate-400">
+                Cancelar edición
               </button>
             )}
           </div>
@@ -482,7 +482,7 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
 
               {/* Info */}
               <div className="flex-1 min-w-0">
-                <h3 className="text-base font-black uppercase truncate text-white leading-tight">{r.client}</h3>
+                <h3 className="text-base font-semibold capitalize truncate text-white leading-tight">{r.client}</h3>
                 {r.ubicado && (
                   <p className="text-[10px] text-slate-500 uppercase mt-1 truncate">
                     <MapPin size={10} className="inline mr-1" />{r.ubicado}
@@ -549,7 +549,7 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
               {otherCategoryResults.map(o => (
                 <div key={o.id} className="bg-slate-900/60 border border-slate-800 rounded-2xl p-3 flex items-center gap-3">
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-black uppercase truncate text-white leading-tight">{o.client}</h3>
+                    <h3 className="text-sm font-semibold capitalize truncate text-white leading-tight">{o.client}</h3>
                     {o.notes && <p className="text-[10px] text-slate-500 mt-0.5 truncate">{o.notes}</p>}
                   </div>
                   <button
