@@ -222,8 +222,10 @@ const FormScreen: React.FC<{ onSave?: (id: string, updated: any) => void }> = ({
       // Vuelve a la lista de origen (donde estabas), no a la de destino -- si
       // vas pasando varios pedidos de Armándose a Terminada uno a uno, te deja
       // seguir en la misma lista en vez de mandarte a la categoría nueva cada vez.
+      // replace: true para que el formulario ya guardado no se quede en el
+      // historial -- si no, el gesto de "atrás" del móvil volvía a abrirlo.
       const originalCategory = (category || '').toUpperCase();
-      const goBack = () => navigate(`/list/${originalCategory || targetCategory}`);
+      const goBack = () => navigate(`/list/${originalCategory || targetCategory}`, { replace: true });
       if (id && targetCategory !== originalCategory) {
         setModal({
           title: `Movido a ${STAGE_LABEL[targetCategory] || targetCategory}`,
