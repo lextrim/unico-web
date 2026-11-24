@@ -6,6 +6,7 @@ import AppModal from './AppModal';
 import DateTimePickerModal from './DateTimePickerModal';
 import { compressImage, createBlobUrl } from '../utils/imageUtils';
 import { toTitleCase } from '../utils/text';
+import { findDuplicateClientLocation } from '../utils/duplicateCheck';
 
 // Un borrador más viejo que esto se descarta: evita que una edición abandonada
 // hace semanas resucite y pise datos buenos al reabrir la pantalla.
@@ -130,30 +131,16 @@ const FormScreen: React.FC<{ onSave?: (id: string, updated: any) => void }> = ({
     const clientUpper = (formData.client || '').toUpperCase().trim();
     if (!clientUpper) { showAlert("Campo obligatorio", "El nombre del cliente es obligatorio"); return; }
 
-    if (!id) {
+    if (!id && targetCategory !== 'MATERIALES') {
       // Solo se puede crear desde Material — bloquear creación directa en otras categorías
-      if (targetCategory !== 'MATERIALES') {
-        showAlert("Acceso restringido", "Los registros solo se pueden crear desde la pantalla de Material.");
-        return;
-      }
-      const FINAL_STATES = ['TERMINADA', 'TERMINACIONES'];
-      if (targetCategory === 'MATERIALES') {
-        const { data: matDups } = await supabase.from('unico_materials').select('id, payload');
-        const isDup = (matDups || []).some((r: any) => r.payload?.client?.toUpperCase().trim() === clientUpper);
-        if (isDup) { showAlert("Cliente duplicado", `Ya existe un material con el cliente "${clientUpper}"`); return; }
-      } else {
-        const { data: ordDups } = await supabase.from('unico_orders').select('id, payload, category');
-        const dupRecord = (ordDups || []).find((r: any) =>
-          r.payload?.client?.toUpperCase().trim() === clientUpper &&
-          !FINAL_STATES.includes((r.category || '').toUpperCase())
-        );
-        if (dupRecord) {
-          const CAT_LABEL: Record<string, string> = { ARMANDOSE: 'Armándose', TERMINADA: 'Terminada', PROGRAMADA: 'Entregas', TERMINACIONES: 'Terminaciones', MATERIALES: 'Materiales' };
-          const donde = CAT_LABEL[(dupRecord.category || '').toUpperCase()] || dupRecord.category;
-          showAlert("Cliente duplicado", `"${clientUpper}" ya existe en ${donde}`);
-          return;
-        }
-      }
+      showAlert("Acceso restringido", "Los registros solo se pueden crear desde la pantalla de Material.");
+      return;
+    }
+
+    const dupLocation = await findDuplicateClientLocation(formData.client || '', id || undefined);
+    if (dupLocation) {
+      showAlert("Cliente duplicado", `"${clientUpper}" ya existe en ${dupLocation}`);
+      return;
     }
 
     if (targetCategory === 'PROGRAMADA' && !formData.deliveryDatetime) {

@@ -9,6 +9,7 @@ import { BADGE_COLORS, getBadgeClass } from "../utils/badges";
 import { compressImage, createBlobUrl } from "../utils/imageUtils";
 import { countWorkingDaysUntil, countWorkingDaysBeforeDelivery } from "../utils/workingDays";
 import { toTitleCase } from "../utils/text";
+import { findDuplicateClientLocation } from "../utils/duplicateCheck";
 
 // Returns urgency level based on working days until delivery (excludes weekends + Seville holidays)
 const getDeliveryUrgency = (deliveryDatetime: string | null | undefined) => {
@@ -126,26 +127,10 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
   const onSave = async () => {
     if (!client.trim()) { showAlert("Campo obligatorio", "El nombre del cliente es obligatorio"); return; }
     const clientUpper = client.toUpperCase().trim();
-    if (!editingId) {
-      // Comprobar duplicado en materiales
-      const dupMat = records.find(r => r.client?.toUpperCase().trim() === clientUpper);
-      if (dupMat) { showAlert("Cliente duplicado", `"${clientUpper}" ya está en la lista de Materiales`); return; }
-      // Comprobar duplicado en pedidos activos
-      // Nota: esto es una comprobación "mejor esfuerzo" desde el cliente, no una garantía —
-      // dos guardados simultáneos pueden colarse los dos. La solución de verdad es un índice
-      // único en la base de datos (ver plan de migración de esquema pendiente).
-      const { data: ordDups } = await supabase.from('unico_orders').select('id, payload, category');
-      const FINAL_STATES = ['TERMINADA', 'TERMINACIONES'];
-      const dupOrd = (ordDups || []).find((r: any) =>
-        r.payload?.client?.toUpperCase().trim() === clientUpper &&
-        !FINAL_STATES.includes((r.category || '').toUpperCase())
-      );
-      if (dupOrd) {
-        const CAT_LABEL: Record<string, string> = { ARMANDOSE: 'Armándose', TERMINADA: 'Terminada', PROGRAMADA: 'Entregas', TERMINACIONES: 'Terminaciones' };
-        const donde = CAT_LABEL[(dupOrd.category || '').toUpperCase()] || dupOrd.category;
-        showAlert("Cliente duplicado", `"${clientUpper}" ya existe en ${donde}`);
-        return;
-      }
+    const dupLocation = await findDuplicateClientLocation(client, editingId || undefined);
+    if (dupLocation) {
+      showAlert("Cliente duplicado", `"${clientUpper}" ya existe en ${dupLocation}`);
+      return;
     }
     setIsUploading(true);
     try {
