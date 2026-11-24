@@ -53,6 +53,12 @@ const CAT_LABEL: Record<string, string> = {
   PROGRAMADA: 'ENTREGAS',
   TERMINACIONES: 'TERMINACIONES',
 };
+const MOVE_LABEL: Record<string, string> = {
+  ARMANDOSE: 'Armándose',
+  TERMINADA: 'Terminada',
+  PROGRAMADA: 'Entregas',
+  TERMINACIONES: 'Terminaciones',
+};
 const CAT_COLOR: Record<string, string> = {
   ARMANDOSE: 'bg-orange-600',
   TERMINADA: 'bg-emerald-600',
@@ -90,6 +96,7 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
   // Limpia blob URLs al desmontar el componente
   useEffect(() => () => { if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current); }, []);
   const [modal, setModal] = useState<any>(null);
+  const [moveStatus, setMoveStatus] = useState<string | null>(null);
 
   const showAlert = (title: string, message?: string, iconBg = 'bg-orange-600', icon = <AlertTriangle size={28} className="text-white" />) =>
     setModal({ title, message, icon, iconBg, onConfirm: () => setModal(null) });
@@ -176,8 +183,13 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
           // Ya no está en Materiales: cancela la alarma nativa de "pasa a Armándose" si había una programada.
           (window as any).AndroidBridge?.cancelNotification?.(`${editingId}_armandose`);
         }
+        // Se queda en Material en vez de saltar a la lista destino: si estás
+        // despachando varios materiales seguidos, no te interrumpe cada vez.
         resetForm();
-        navigate(`/list/${estado}`);
+        await onRefresh?.();
+        fetchMaterials();
+        setMoveStatus(`Movido a ${MOVE_LABEL[estado] || estado}`);
+        setTimeout(() => setMoveStatus(null), 2500);
       } else {
         const ex = editingId ? records.find(r => r.id === editingId) : null;
         const { error: upsertError } = await supabase.from('unico_materials').upsert({
@@ -445,6 +457,11 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
               <button onClick={resetForm} className="w-full bg-slate-800 py-3 rounded-xl font-medium text-[12.5px] active:scale-95 transition-all text-slate-400">
                 Cancelar edición
               </button>
+            )}
+            {moveStatus && (
+              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl py-3 text-center text-emerald-400 font-medium text-[13px]">
+                {moveStatus}
+              </div>
             )}
           </div>
         )}

@@ -215,7 +215,10 @@ const FormScreen: React.FC<{ onSave?: (id: string, updated: any) => void }> = ({
 
       localStorage.removeItem(draftKey);
       setSaved(true);
-      setTimeout(() => navigate(id ? `/list/${(category || targetCategory).toUpperCase()}` : `/list/${targetCategory}`), 100);
+      // Vuelve a la lista de origen (donde estabas), no a la de destino -- si
+      // vas pasando varios pedidos de Armándose a Terminada uno a uno, te deja
+      // seguir en la misma lista en vez de mandarte a la categoría nueva cada vez.
+      setTimeout(() => navigate(`/list/${(category || targetCategory).toUpperCase()}`), 100);
     } catch (error: any) {
       showAlert("Error al guardar", error?.message || "Ha ocurrido un error. Inténtalo de nuevo.", 'bg-red-600', <AlertCircle size={28} className="text-white" />);
       setLoading(false);
