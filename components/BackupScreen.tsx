@@ -26,8 +26,8 @@ const BackupScreen = () => {
       link.click();
       document.body.removeChild(link);
       setTimeout(() => URL.revokeObjectURL(url), 1000);
-      setStatus({ type: 'success', msg: 'COPIA DESCARGADA' });
-    } catch (err: any) { setStatus({ type: 'error', msg: 'ERROR' }); }
+      setStatus({ type: 'success', msg: 'Copia descargada' });
+    } catch (err: any) { setStatus({ type: 'error', msg: 'Error' }); }
     finally { setLoading(false); }
   };
 
@@ -40,27 +40,87 @@ const BackupScreen = () => {
         const json = JSON.parse(ev.target?.result as string);
         // Validar estructura del backup
         if (typeof json !== 'object' || json === null || (!Array.isArray(json.materials) && !Array.isArray(json.orders))) {
-          setStatus({ type: 'error', msg: 'ARCHIVO NO VÁLIDO — No es un backup de ÚNICO' });
+          setStatus({ type: 'error', msg: 'Archivo no válido — no es un backup de ÚNICO' });
           return;
         }
         const mats = Array.isArray(json.materials) ? json.materials : [];
         const ords = Array.isArray(json.orders) ? json.orders : [];
         if (mats.length === 0 && ords.length === 0) {
-          setStatus({ type: 'error', msg: 'EL ARCHIVO ESTÁ VACÍO' });
+          setStatus({ type: 'error', msg: 'El archivo está vacío' });
           return;
         }
         if (mats.length > 0) await supabase.from('unico_materials').upsert(mats);
         if (ords.length > 0) await supabase.from('unico_orders').upsert(ords);
-        setStatus({ type: 'success', msg: `RESTAURADOS: ${mats.length} MATERIALES · ${ords.length} PEDIDOS` });
+        setStatus({ type: 'success', msg: `Restaurados: ${mats.length} materiales · ${ords.length} pedidos` });
       } catch (err: any) {
-        setStatus({ type: 'error', msg: 'ERROR AL LEER EL ARCHIVO' });
+        setStatus({ type: 'error', msg: 'Error al leer el archivo' });
       } finally { setLoading(false); }
     };
     reader.readAsText(pendingFile);
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-950 text-white"><div className="bg-slate-900 shadow-lg z-30 border-b border-slate-800"><div className="max-w-xl mx-auto px-5 py-3 flex items-center gap-2"><button onClick={() => navigate('/menu')}><ChevronLeft size={28} /></button><h1 className="text-lg font-black uppercase tracking-wider">Seguridad</h1></div></div><div className="flex-1 w-full max-w-xl mx-auto p-5 space-y-6"><div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 text-center shadow-xl"><Download className="mx-auto text-blue-500 mb-4" size={40} /><button onClick={exportData} disabled={loading} className="w-full bg-blue-600 py-4 rounded-2xl font-black uppercase tracking-widest active:scale-95 transition-all">Generar Backup</button></div><div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 text-center relative shadow-xl"><Upload className="mx-auto text-orange-500 mb-4" size={40} /><button className="w-full bg-slate-800 py-4 rounded-2xl font-black uppercase tracking-widest">Importar JSON</button><input type="file" accept=".json" onChange={(e) => { if(e.target.files?.[0]) { setPendingFile(e.target.files[0]); setShowConfirm(true); } }} className="absolute inset-0 opacity-0 cursor-pointer" /></div>{status && <div className="p-4 rounded-2xl text-center font-black uppercase text-[10px] bg-slate-900 text-emerald-400 border border-emerald-500/20 tracking-widest">{status.msg}</div>}</div>{showConfirm && (<div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-sm"><div className="bg-slate-900 border border-slate-800 rounded-[2.5rem] p-8 max-w-sm w-full shadow-2xl"><AlertTriangle className="text-orange-500 mx-auto mb-4" size={32} /><h3 className="text-white text-xl font-black text-center uppercase mb-4">¿Importar Datos?</h3><div className="space-y-3"><button onClick={confirmImport} className="w-full bg-emerald-600 py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all">Sí, Restaurar</button><button onClick={() => setShowConfirm(false)} className="w-full bg-slate-800 py-4 rounded-2xl font-black uppercase tracking-widest active:scale-95 transition-all">Cancelar</button></div></div></div>)}</div>
+    <div className="flex flex-col min-h-screen bg-slate-950 text-white normal-case">
+
+      <div className="bg-slate-900 shadow-lg z-30 border-b border-slate-800">
+        <div className="max-w-xl mx-auto px-5 py-4 flex items-center gap-2">
+          <button onClick={() => navigate('/menu')} className="active:scale-90 transition-transform"><ChevronLeft size={28} /></button>
+          <h1 className="text-lg font-semibold text-slate-100">Seguridad</h1>
+        </div>
+      </div>
+
+      <div className="flex-1 w-full max-w-xl mx-auto p-5 space-y-4">
+
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 text-center shadow-xl">
+          <div className="w-14 h-14 rounded-2xl bg-blue-600/15 flex items-center justify-center mx-auto mb-4">
+            <Download className="text-blue-400" size={26} />
+          </div>
+          <button onClick={exportData} disabled={loading} className="w-full bg-blue-600 py-4 rounded-2xl font-semibold active:scale-95 transition-all">
+            Generar backup
+          </button>
+        </div>
+
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 text-center relative shadow-xl">
+          <div className="w-14 h-14 rounded-2xl bg-orange-600/15 flex items-center justify-center mx-auto mb-4">
+            <Upload className="text-orange-400" size={26} />
+          </div>
+          <button className="w-full bg-slate-800 py-4 rounded-2xl font-semibold text-slate-200">Importar JSON</button>
+          <input
+            type="file"
+            accept=".json"
+            onChange={(e) => { if (e.target.files?.[0]) { setPendingFile(e.target.files[0]); setShowConfirm(true); } }}
+            className="absolute inset-0 opacity-0 cursor-pointer"
+          />
+        </div>
+
+        {status && (
+          <div className={`p-4 rounded-2xl text-center font-medium text-[13px] border ${
+            status.type === 'success' ? 'bg-slate-900 text-emerald-400 border-emerald-500/20' : 'bg-slate-900 text-red-400 border-red-500/20'
+          }`}>
+            {status.msg}
+          </div>
+        )}
+      </div>
+
+      {showConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-sm">
+          <div className="bg-slate-900 border border-slate-800 rounded-[2.5rem] p-8 max-w-sm w-full shadow-2xl">
+            <div className="w-14 h-14 rounded-2xl bg-orange-600/15 flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle className="text-orange-400" size={28} />
+            </div>
+            <h3 className="text-white text-xl font-semibold text-center mb-4">¿Importar datos?</h3>
+            <div className="space-y-3">
+              <button onClick={confirmImport} className="w-full bg-emerald-600 py-4 rounded-2xl font-semibold shadow-lg active:scale-95 transition-all">
+                Sí, restaurar
+              </button>
+              <button onClick={() => setShowConfirm(false)} className="w-full bg-slate-800 py-4 rounded-2xl font-semibold text-slate-300 active:scale-95 transition-all">
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 export default BackupScreen;

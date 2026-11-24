@@ -203,12 +203,12 @@ const InformesScreen: React.FC<{ isAdmin: boolean; isAPK: boolean }> = ({ isAdmi
   };
 
   if (!isAdmin) return (
-    <div className="p-10 text-white font-black uppercase text-center">Acceso Denegado</div>
+    <div className="p-10 text-white font-semibold text-center normal-case">Acceso denegado</div>
   );
 
 
   return (
-    <div className="flex flex-col h-screen bg-slate-950 text-white overflow-hidden">
+    <div className="flex flex-col h-screen bg-slate-950 text-white overflow-hidden normal-case">
 
       {/* ── Modal trazabilidad ── */}
       {traceRecord && (
@@ -217,8 +217,8 @@ const InformesScreen: React.FC<{ isAdmin: boolean; isAPK: boolean }> = ({ isAdmi
 
             <div className="p-5 border-b border-slate-800 flex items-center justify-between gap-3">
               <div className="flex-1 min-w-0">
-                <h2 className="text-sm font-black uppercase text-white truncate">{traceRecord.client}</h2>
-                <p className="text-[10px] text-slate-500 font-bold uppercase mt-0.5">
+                <h2 className="text-[15px] font-semibold capitalize text-white truncate">{traceRecord.client}</h2>
+                <p className="text-[11px] text-slate-500 font-medium mt-0.5">
                   Trazabilidad · {traceRecords.length} {traceRecords.length === 1 ? 'etapa' : 'etapas'}
                 </p>
               </div>
@@ -258,7 +258,7 @@ const InformesScreen: React.FC<{ isAdmin: boolean; isAPK: boolean }> = ({ isAdmi
                           <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-lg border ${STATUS_COLORS[r.status] || 'bg-slate-700 text-slate-400 border-slate-600'}`}>
                             {label(r.status)}
                           </span>
-                          <span className="text-[9px] text-slate-500 font-bold shrink-0">
+                          <span className="text-[9px] text-slate-500 font-medium shrink-0">
                             {r.date.toLocaleDateString('es-ES')}
                           </span>
                         </div>
@@ -291,7 +291,7 @@ const InformesScreen: React.FC<{ isAdmin: boolean; isAPK: boolean }> = ({ isAdmi
                     {elapsed && (
                       <div className="flex items-center gap-2 ml-9 mb-1">
                         <Clock size={9} className="text-slate-600 shrink-0" />
-                        <span className="text-[9px] text-slate-600 font-bold">{elapsed} en esta etapa</span>
+                        <span className="text-[9px] text-slate-600 font-medium">{elapsed} en esta etapa</span>
                       </div>
                     )}
                   </div>
@@ -309,34 +309,34 @@ const InformesScreen: React.FC<{ isAdmin: boolean; isAPK: boolean }> = ({ isAdmi
             <button onClick={() => navigate('/menu')} className="active:scale-90 transition-transform">
               <ChevronLeft size={28} />
             </button>
-            <h1 className="text-lg font-black uppercase">Informes</h1>
+            <h1 className="text-lg font-semibold">Informes</h1>
           </div>
           <button
             onClick={handlePrintReport}
             disabled={printing || filteredRecords.length === 0}
-            className="bg-blue-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 disabled:opacity-40 active:scale-95 transition-all"
+            className="bg-blue-600 px-4 py-2 rounded-xl text-[12.5px] font-medium flex items-center gap-2 disabled:opacity-40 active:scale-95 transition-all"
           >
             {printing ? <Loader2 className="animate-spin" size={14} /> : <Printer size={14} />}
-            IMPRIMIR
+            Imprimir
           </button>
         </div>
       </div>
 
       {/* ── Filtros ── */}
-      <div className="bg-slate-950/95 p-4 border-b border-slate-900">
+      <div className="bg-slate-950/95 px-5 py-4 border-b border-slate-900">
         <div className="max-w-xl mx-auto space-y-3">
 
           <select
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
-            className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-white font-black uppercase text-xs outline-none focus:border-blue-500 transition-all"
+            className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-slate-200 font-medium text-sm outline-none focus:border-blue-500 transition-all"
           >
-            <option value="TODOS">TODOS LOS REGISTROS</option>
-            <option value="MATERIALES">MATERIAL</option>
-            <option value="ARMANDOSE">ARMÁNDOSE</option>
-            <option value="TERMINADA">TERMINADA</option>
-            <option value="PROGRAMADA">ENTREGAS</option>
-            <option value="TERMINACIONES">TERMINACIONES</option>
+            <option value="TODOS">Todos los registros</option>
+            <option value="MATERIALES">Material</option>
+            <option value="ARMANDOSE">Armándose</option>
+            <option value="TERMINADA">Terminada</option>
+            <option value="PROGRAMADA">Entregas</option>
+            <option value="TERMINACIONES">Terminaciones</option>
           </select>
 
           <div className="relative">
@@ -344,8 +344,8 @@ const InformesScreen: React.FC<{ isAdmin: boolean; isAPK: boolean }> = ({ isAdmi
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-800 p-3 pl-10 rounded-xl text-xs font-black uppercase text-white outline-none focus:border-blue-500 transition-all"
-              placeholder="BUSCAR CLIENTE..."
+              className="w-full bg-slate-900 border border-slate-800 p-3 pl-10 rounded-xl text-sm text-white outline-none focus:border-blue-500 transition-all"
+              placeholder="Buscar cliente…"
             />
           </div>
 
@@ -354,26 +354,26 @@ const InformesScreen: React.FC<{ isAdmin: boolean; isAPK: boolean }> = ({ isAdmi
               type="date"
               value={dateFrom}
               onChange={e => setDateFrom(e.target.value)}
-              className="flex-1 bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-[10px] font-black text-slate-400 outline-none focus:border-blue-500 transition-all"
+              className="flex-1 bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-[12px] font-medium text-slate-300 outline-none focus:border-blue-500 transition-all"
             />
-            <span className="text-slate-600 text-[10px] font-black shrink-0">—</span>
+            <span className="text-slate-600 text-[12px] font-medium shrink-0">—</span>
             <input
               type="date"
               value={dateTo}
               onChange={e => setDateTo(e.target.value)}
-              className="flex-1 bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-[10px] font-black text-slate-400 outline-none focus:border-blue-500 transition-all"
+              className="flex-1 bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-[12px] font-medium text-slate-300 outline-none focus:border-blue-500 transition-all"
             />
             {(dateFrom || dateTo) && (
               <button
                 onClick={() => { setDateFrom(''); setDateTo(''); }}
-                className="px-3 py-2.5 bg-red-900/20 rounded-xl text-red-500 text-[10px] font-black"
+                className="px-3 py-2.5 bg-red-900/20 rounded-xl text-red-400"
               >
                 <X size={12} />
               </button>
             )}
           </div>
 
-          <p className="text-[9px] text-slate-600 font-black uppercase text-right">
+          <p className="text-[11px] text-slate-500 font-medium text-right">
             {filteredRecords.length} registro{filteredRecords.length !== 1 ? 's' : ''}
             {totalPages > 1 && ` · Página ${page}/${totalPages}`}
           </p>
@@ -384,9 +384,9 @@ const InformesScreen: React.FC<{ isAdmin: boolean; isAPK: boolean }> = ({ isAdmi
       <div className="flex-1 overflow-y-auto no-scrollbar">
         <div className="max-w-xl mx-auto p-5 space-y-3 pb-24">
           {loading ? (
-            <div className="text-center py-10 font-black text-slate-500 uppercase">Cargando...</div>
+            <div className="text-center py-10 font-medium text-slate-500">Cargando…</div>
           ) : filteredRecords.length === 0 ? (
-            <div className="text-center py-10 font-black text-slate-600 uppercase text-xs">Sin resultados</div>
+            <div className="text-center py-10 font-medium text-slate-600 text-sm">Sin resultados</div>
           ) : paginatedRecords.map(r => (
             <button
               key={r.id}
@@ -395,8 +395,8 @@ const InformesScreen: React.FC<{ isAdmin: boolean; isAPK: boolean }> = ({ isAdmi
             >
               <div className="flex justify-between items-start gap-2">
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-black uppercase text-white truncate">{r.client}</h3>
-                  <div className="flex items-center gap-3 mt-1 text-[10px] text-slate-500 font-bold uppercase">
+                  <h3 className="text-[15px] font-semibold capitalize text-white truncate">{r.client}</h3>
+                  <div className="flex items-center gap-3 mt-1 text-[11px] text-slate-500 font-medium">
                     <span className="flex items-center gap-1">
                       <Calendar size={11} /> {r.date.toLocaleDateString('es-ES')}
                     </span>
@@ -444,19 +444,19 @@ const InformesScreen: React.FC<{ isAdmin: boolean; isAPK: boolean }> = ({ isAdmi
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl text-[10px] font-black uppercase text-slate-400 disabled:opacity-30 active:scale-95 transition-all"
+                className="px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl text-[12.5px] font-medium text-slate-400 disabled:opacity-30 active:scale-95 transition-all"
               >
-                ANTERIOR
+                Anterior
               </button>
-              <span className="text-[10px] font-black text-slate-500 uppercase">
+              <span className="text-[12.5px] font-medium text-slate-500">
                 {page} / {totalPages}
               </span>
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl text-[10px] font-black uppercase text-slate-400 disabled:opacity-30 active:scale-95 transition-all"
+                className="px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl text-[12.5px] font-medium text-slate-400 disabled:opacity-30 active:scale-95 transition-all"
               >
-                SIGUIENTE
+                Siguiente
               </button>
             </div>
           )}

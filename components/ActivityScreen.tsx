@@ -50,16 +50,16 @@ const ActivityScreen: React.FC = () => {
   }, {});
 
   return (
-    <div className="flex flex-col h-screen bg-slate-950 overflow-hidden">
+    <div className="flex flex-col h-screen bg-slate-950 overflow-hidden normal-case">
 
       {/* Header */}
       <div className="bg-violet-600 shadow-lg sticky top-0 z-30">
-        <div className="max-w-xl mx-auto px-5 py-3 flex items-center justify-between text-white">
+        <div className="max-w-xl mx-auto px-5 py-4 flex items-center justify-between text-white">
           <div className="flex items-center gap-2">
             <button onClick={() => navigate('/menu')} className="active:scale-90 transition-transform">
               <ChevronLeft size={28} />
             </button>
-            <h1 className="text-lg font-black uppercase text-white leading-none">Actividad</h1>
+            <h1 className="text-lg font-semibold text-white leading-none">Actividad</h1>
           </div>
           <button onClick={fetchLogs} className="bg-white/20 p-2 rounded-full active:scale-90 transition-transform">
             <RefreshCw size={20} />
@@ -74,10 +74,10 @@ const ActivityScreen: React.FC = () => {
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`flex-1 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${
+              className={`flex-1 py-2.5 rounded-xl font-medium text-[12.5px] transition-all ${
                 filter === f
                   ? 'bg-violet-600 text-white'
-                  : 'bg-slate-900 text-slate-500 border border-slate-800'
+                  : 'bg-slate-900 text-slate-400 border border-slate-800'
               }`}
             >
               {f === 'all' ? 'Todo' : f === 'login' ? 'Entradas' : 'Salidas'}
@@ -93,18 +93,18 @@ const ActivityScreen: React.FC = () => {
           {/* Stats por usuario */}
           {Object.keys(stats).length > 0 && (
             <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4">
-              <p className="text-slate-500 font-black uppercase text-[10px] tracking-widest mb-3">Resumen de usuarios</p>
+              <p className="text-slate-500 font-medium text-[12.5px] mb-3">Resumen de usuarios</p>
               <div className="space-y-2">
                 {Object.entries(stats).map(([email, s]) => (
                   <div key={email} className="flex items-center justify-between gap-2">
                     <div className="flex-1 min-w-0">
-                      <p className="text-white font-bold text-xs truncate">{email}</p>
+                      <p className="text-white font-medium text-[13px] truncate">{email}</p>
                       {s.lastLogin && (
-                        <p className="text-slate-500 text-[10px]">Último acceso: {formatDate(s.lastLogin)}</p>
+                        <p className="text-slate-500 text-[11px] mt-0.5">Último acceso: {formatDate(s.lastLogin)}</p>
                       )}
                     </div>
                     <div className="bg-violet-900/40 px-3 py-1 rounded-xl shrink-0">
-                      <span className="text-violet-400 font-black text-xs">{s.logins} accesos</span>
+                      <span className="text-violet-400 font-medium text-[12.5px]">{s.logins} accesos</span>
                     </div>
                   </div>
                 ))}
@@ -114,12 +114,12 @@ const ActivityScreen: React.FC = () => {
 
           {/* Lista de eventos */}
           {loading ? (
-            <div className="text-center text-slate-500 font-black uppercase text-xs tracking-widest py-12">
-              Cargando...
+            <div className="text-center text-slate-500 font-medium text-sm py-12">
+              Cargando…
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-16">
-              <p className="text-slate-600 font-black uppercase text-xs tracking-widest">Sin registros</p>
+              <p className="text-slate-600 font-medium text-sm">Sin registros</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -135,8 +135,8 @@ const ActivityScreen: React.FC = () => {
                     }
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-white font-bold text-xs truncate">{log.user_email}</p>
-                    <p className="text-slate-500 text-[10px] mt-0.5">{formatDate(log.created_at)}</p>
+                    <p className="text-white font-medium text-[13px] truncate">{log.user_email}</p>
+                    <p className="text-slate-500 text-[11px] mt-0.5">{formatDate(log.created_at)}</p>
                   </div>
                   <div className="shrink-0">
                     {log.details?.platform === 'apk'
