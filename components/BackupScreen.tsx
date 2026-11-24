@@ -3,6 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Download, Upload, AlertTriangle } from 'lucide-react';
 import { supabase } from '../supabase';
 import { fetchAllRows } from '../utils/fetchAll';
+import { getIsAPK } from '../utils/platform';
+
+// btoa no admite directamente texto fuera de Latin-1 (acentos, etc.) -- este es el truco estándar para codificar UTF-8 a base64.
+const toBase64Utf8 = (str: string) => btoa(unescape(encodeURIComponent(str)));
 
 const BackupScreen = () => {
   const navigate = useNavigate();
@@ -17,16 +21,28 @@ const BackupScreen = () => {
       const materials = await fetchAllRows('unico_materials');
       const orders = await fetchAllRows('unico_orders');
       const backup = { date: new Date().toISOString(), materials, orders };
-      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `BACKUP_UNICO_${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      setStatus({ type: 'success', msg: 'Copia descargada' });
+      const json = JSON.stringify(backup, null, 2);
+      const filename = `BACKUP_UNICO_${new Date().toISOString().split('T')[0]}.json`;
+
+      // El <a download> de un navegador normal no sirve de nada dentro del WebView de
+      // la APK -- no hay gestor de descargas detrás que lo recoja. Ahí se guarda vía
+      // el puente nativo (AndroidBridge.saveFile), en la carpeta de Descargas del móvil.
+      if (getIsAPK() && (window as any).AndroidBridge?.saveFile) {
+        const ok = (window as any).AndroidBridge.saveFile(toBase64Utf8(json), filename);
+        if (!ok) throw new Error('No se pudo guardar el archivo en el dispositivo');
+        setStatus({ type: 'success', msg: `Guardado en Descargas: ${filename}` });
+      } else {
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        setStatus({ type: 'success', msg: 'Copia descargada' });
+      }
     } catch (err: any) { setStatus({ type: 'error', msg: 'Error' }); }
     finally { setLoading(false); }
   };

@@ -249,5 +249,43 @@ class MainActivity : AppCompatActivity() {
         fun cancelNotification(orderId: String) {
             NotificationScheduler.cancelNotification(this@MainActivity, orderId)
         }
+
+        /**
+         * Guarda un fichero de texto (el backup JSON) en la carpeta de Descargas.
+         * El <a download> normal de un navegador no funciona dentro de un WebView
+         * de la APK -- no hay ningún gestor de descargas detrás que lo recoja.
+         * @param base64Data contenido del fichero en base64
+         * @param filename   nombre con el que guardarlo
+         */
+        @JavascriptInterface
+        fun saveFile(base64Data: String, filename: String): Boolean {
+            return try {
+                val bytes = Base64.decode(base64Data, Base64.DEFAULT)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    val resolver = contentResolver
+                    val contentValues = ContentValues().apply {
+                        put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
+                        put(MediaStore.MediaColumns.MIME_TYPE, "application/json")
+                        put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+                    }
+                    val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+                        ?: throw Exception("No se pudo crear el archivo")
+                    resolver.openOutputStream(uri)?.use { it.write(bytes) }
+                } else {
+                    val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                    if (!downloadsDir.exists()) downloadsDir.mkdirs()
+                    FileOutputStream(File(downloadsDir, filename)).use { it.write(bytes) }
+                }
+                runOnUiThread {
+                    Toast.makeText(this@MainActivity, "Guardado en Descargas: $filename", Toast.LENGTH_LONG).show()
+                }
+                true
+            } catch (e: Exception) {
+                runOnUiThread {
+                    Toast.makeText(this@MainActivity, "No se pudo guardar el archivo: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+                false
+            }
+        }
     }
 }
