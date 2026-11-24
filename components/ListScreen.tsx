@@ -106,7 +106,7 @@ const ListScreen: React.FC<{ orders: any[], onDelete: (id: string) => void, isAd
   const [modal, setModal] = useState<any>(null);
 
   const showConfirm = (title: string, message: string, onConfirm: () => void) =>
-    setModal({ title, message, icon: <Trash2 size={28} className="text-white" />, iconBg: 'bg-red-600', confirmText: 'BORRAR', confirmClass: 'bg-red-600', onConfirm: () => { setModal(null); onConfirm(); }, onCancel: () => setModal(null) });
+    setModal({ title, message, icon: <Trash2 size={28} className="text-white" />, iconBg: 'bg-red-600', confirmText: 'Borrar', confirmClass: 'bg-red-600', onConfirm: () => { setModal(null); onConfirm(); }, onCancel: () => setModal(null) });
 
   const handleMoveToEntregas = async (datetime: string | null) => {
     if (!moveTarget) return;

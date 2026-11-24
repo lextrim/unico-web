@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Trash2, MapPin, Search, Camera, Loader2, Image as ImageIcon, Edit3, X, FileText, AlertTriangle, AlertCircle } from "lucide-react";
 import { supabase } from "../supabase";
 import AppModal from "./AppModal";
+import Select from "./Select";
 import DateTimePickerModal from "./DateTimePickerModal";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { BADGE_COLORS, getBadgeClass } from "../utils/badges";
@@ -102,7 +103,7 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
     setModal({ title, message, icon, iconBg, onConfirm: () => setModal(null) });
 
   const showConfirm = (title: string, message: string, onConfirm: () => void) =>
-    setModal({ title, message, icon: <Trash2 size={28} className="text-white" />, iconBg: 'bg-red-600', confirmText: 'BORRAR', confirmClass: 'bg-red-600', onConfirm: () => { setModal(null); onConfirm(); }, onCancel: () => setModal(null) });
+    setModal({ title, message, icon: <Trash2 size={28} className="text-white" />, iconBg: 'bg-red-600', confirmText: 'Borrar', confirmClass: 'bg-red-600', onConfirm: () => { setModal(null); onConfirm(); }, onCancel: () => setModal(null) });
 
   const fetchMaterials = async () => {
     setListLoading(true);
@@ -189,7 +190,7 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
         await onRefresh?.();
         fetchMaterials();
         setMoveStatus(`Movido a ${MOVE_LABEL[estado] || estado}`);
-        setTimeout(() => setMoveStatus(null), 2500);
+        setTimeout(() => setMoveStatus(null), 4000);
       } else {
         const ex = editingId ? records.find(r => r.id === editingId) : null;
         const { error: upsertError } = await supabase.from('unico_materials').upsert({
@@ -255,6 +256,11 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
 
   return (
     <div className="flex flex-col h-screen bg-slate-950 text-white overflow-hidden relative normal-case">
+      {moveStatus && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[120] bg-emerald-600 text-white font-medium text-[13px] px-5 py-3 rounded-2xl shadow-2xl whitespace-nowrap">
+          {moveStatus}
+        </div>
+      )}
       {modal && <AppModal {...modal} />}
       {showDatePicker && (
         <DateTimePickerModal
@@ -370,17 +376,17 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
             </div>
 
             {/* Estado destino */}
-            <select
+            <Select
               value={estado}
-              onChange={e => setEstado(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-slate-200 font-medium outline-none transition-all"
-            >
-              <option value="">Material</option>
-              <option value="ARMANDOSE">Armándose</option>
-              <option value="TERMINADA">Terminada</option>
-              <option value="PROGRAMADA">Entregas</option>
-              <option value="TERMINACIONES">Terminaciones</option>
-            </select>
+              onChange={setEstado}
+              options={[
+                { value: '', label: 'Material' },
+                { value: 'ARMANDOSE', label: 'Armándose' },
+                { value: 'TERMINADA', label: 'Terminada' },
+                { value: 'PROGRAMADA', label: 'Entregas' },
+                { value: 'TERMINACIONES', label: 'Terminaciones' },
+              ]}
+            />
 
             {/* Fecha de entrega */}
             <div className="space-y-1">
@@ -457,11 +463,6 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
               <button onClick={resetForm} className="w-full bg-slate-800 py-3 rounded-xl font-medium text-[12.5px] active:scale-95 transition-all text-slate-400">
                 Cancelar edición
               </button>
-            )}
-            {moveStatus && (
-              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl py-3 text-center text-emerald-400 font-medium text-[13px]">
-                {moveStatus}
-              </div>
             )}
           </div>
         )}

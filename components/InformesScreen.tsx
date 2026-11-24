@@ -4,6 +4,7 @@ import { ChevronLeft, Search, Calendar, MapPin, FileText, X, ChevronRight, Clock
 import { getBadgeClass } from '../utils/badges';
 import { escapeHtml } from '../utils/text';
 import { fetchAllRows } from '../utils/fetchAll';
+import Select from './Select';
 
 const STATUS_COLORS: Record<string, string> = {
   MATERIALES:    'bg-blue-500/20 text-blue-400 border-blue-500/30',
@@ -326,18 +327,19 @@ const InformesScreen: React.FC<{ isAdmin: boolean; isAPK: boolean }> = ({ isAdmi
       <div className="bg-slate-950/95 px-5 py-4 border-b border-slate-900">
         <div className="max-w-xl mx-auto space-y-3">
 
-          <select
+          <Select
             value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value)}
+            onChange={setStatusFilter}
             className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-slate-200 font-medium text-sm outline-none focus:border-blue-500 transition-all"
-          >
-            <option value="TODOS">Todos los registros</option>
-            <option value="MATERIALES">Material</option>
-            <option value="ARMANDOSE">Armándose</option>
-            <option value="TERMINADA">Terminada</option>
-            <option value="PROGRAMADA">Entregas</option>
-            <option value="TERMINACIONES">Terminaciones</option>
-          </select>
+            options={[
+              { value: 'TODOS', label: 'Todos los registros' },
+              { value: 'MATERIALES', label: 'Material' },
+              { value: 'ARMANDOSE', label: 'Armándose' },
+              { value: 'TERMINADA', label: 'Terminada' },
+              { value: 'PROGRAMADA', label: 'Entregas' },
+              { value: 'TERMINACIONES', label: 'Terminaciones' },
+            ]}
+          />
 
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />

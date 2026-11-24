@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, Save, Image as ImageIcon, Loader2, Clock, AlertTriangle, AlertCircle, ChevronDown } from 'lucide-react';
+import { ChevronLeft, Save, Image as ImageIcon, Loader2, Clock, AlertTriangle, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../supabase';
 import AppModal from './AppModal';
+import Select from './Select';
 import DateTimePickerModal from './DateTimePickerModal';
 import { compressImage, createBlobUrl } from '../utils/imageUtils';
 import { toTitleCase } from '../utils/text';
@@ -43,6 +44,9 @@ const NEXT_OPTIONS: Record<string, { value: string; label: string }[]> = {
   PROGRAMADA:   [{ value: 'PROGRAMADA', label: 'Entregas' }, { value: 'TERMINACIONES', label: 'Terminaciones' }],
   TERMINACIONES:[{ value: 'TERMINACIONES', label: 'Terminaciones' }],
 };
+const STAGE_LABEL: Record<string, string> = Object.fromEntries(
+  Object.values(NEXT_OPTIONS).flat().map(o => [o.value, o.label])
+);
 
 // ─── FormScreen ────────────────────────────────────────────────────────────────
 const FormScreen: React.FC<{ onSave?: (id: string, updated: any) => void }> = ({ onSave }) => {
@@ -218,7 +222,18 @@ const FormScreen: React.FC<{ onSave?: (id: string, updated: any) => void }> = ({
       // Vuelve a la lista de origen (donde estabas), no a la de destino -- si
       // vas pasando varios pedidos de Armándose a Terminada uno a uno, te deja
       // seguir en la misma lista en vez de mandarte a la categoría nueva cada vez.
-      setTimeout(() => navigate(`/list/${(category || targetCategory).toUpperCase()}`), 100);
+      const originalCategory = (category || '').toUpperCase();
+      const goBack = () => navigate(`/list/${originalCategory || targetCategory}`);
+      if (id && targetCategory !== originalCategory) {
+        setModal({
+          title: `Movido a ${STAGE_LABEL[targetCategory] || targetCategory}`,
+          icon: <CheckCircle2 size={28} className="text-white" />,
+          iconBg: 'bg-emerald-600',
+          onConfirm: () => { setModal(null); goBack(); },
+        });
+      } else {
+        setTimeout(goBack, 100);
+      }
     } catch (error: any) {
       showAlert("Error al guardar", error?.message || "Ha ocurrido un error. Inténtalo de nuevo.", 'bg-red-600', <AlertCircle size={28} className="text-white" />);
       setLoading(false);
@@ -293,19 +308,16 @@ const FormScreen: React.FC<{ onSave?: (id: string, updated: any) => void }> = ({
             {/* Estado */}
             <div>
               <label className="block text-[12px] font-medium text-slate-500 mb-2 ml-2">Mover a estado</label>
-              <div className="relative">
-                <select
-                  name="category"
-                  value={formData.category || ''}
-                  onChange={handleInputChange}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 pr-10 text-slate-200 font-medium text-sm outline-none appearance-none focus:border-blue-500 transition-all"
-                >
-                  {(NEXT_OPTIONS[category?.toUpperCase() || ''] || []).map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-                <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
-              </div>
+              <Select
+                value={formData.category || ''}
+                onChange={(v) => setFormData((p: any) => {
+                  const updated = { ...p, category: v };
+                  saveDraft(draftKey, updated);
+                  return updated;
+                })}
+                options={NEXT_OPTIONS[category?.toUpperCase() || ''] || []}
+                className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-slate-200 font-medium text-sm outline-none focus:border-blue-500 transition-all flex items-center justify-between"
+              />
             </div>
 
             {/* Cliente */}
