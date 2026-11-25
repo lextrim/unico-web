@@ -6,6 +6,7 @@ import { Bell, X, WifiOff } from 'lucide-react';
 import { getIsAPK } from './utils/platform';
 import { getAutoMoveTimestamp, isFeriaDataMissing } from './utils/workingDays';
 import { fetchAllRows } from './utils/fetchAll';
+import { archiveAndDelete } from './utils/archive';
 
 import MenuScreen from './components/MenuScreen';
 import MaterialScreen from './components/MaterialScreen';
@@ -313,14 +314,14 @@ const App: React.FC = () => {
     setOrders(prev => prev.map(o => o.id === savedId ? { ...o, ...updated } : o));
   };
 
-  const handleDelete = async (id: string) => {
-    await supabase.from('unico_orders').delete().eq('id', id);
-    await supabase.from('unico_materials').delete().eq('id', id);
+  const handleDelete = async (order: any, completada: boolean, motivo: string | null) => {
+    const table = order.category === 'MATERIALES' ? 'unico_materials' : 'unico_orders';
+    await archiveAndDelete(table, { id: order.id, payload: order, category: order.category, created_at: order.created_at }, completada, motivo);
     if (isAPK) {
       const bridge = (window as any).AndroidBridge;
-      bridge?.cancelNotification?.(`${id}_due`);
-      bridge?.cancelNotification?.(`${id}_30min`);
-      bridge?.cancelNotification?.(`${id}_armandose`);
+      bridge?.cancelNotification?.(`${order.id}_due`);
+      bridge?.cancelNotification?.(`${order.id}_30min`);
+      bridge?.cancelNotification?.(`${order.id}_armandose`);
     }
     loadData();
   };

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Trash2, MapPin, Search, Camera, Loader2, Image as ImageIcon, Edit3, X, FileText, AlertTriangle, AlertCircle } from "lucide-react";
 import { supabase } from "../supabase";
 import AppModal from "./AppModal";
+import DeleteArchiveModal from "./DeleteArchiveModal";
 import Select from "./Select";
 import DateTimePickerModal from "./DateTimePickerModal";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
@@ -11,6 +12,7 @@ import { compressImage, createBlobUrl } from "../utils/imageUtils";
 import { countWorkingDaysUntil, countWorkingDaysBeforeDelivery } from "../utils/workingDays";
 import { toTitleCase } from "../utils/text";
 import { findDuplicateClientLocation } from "../utils/duplicateCheck";
+import { archiveAndDelete } from "../utils/archive";
 
 // Returns urgency level based on working days until delivery (excludes weekends + Seville holidays)
 const getDeliveryUrgency = (deliveryDatetime: string | null | undefined) => {
@@ -98,12 +100,10 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
   useEffect(() => () => { if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current); }, []);
   const [modal, setModal] = useState<any>(null);
   const [moveStatus, setMoveStatus] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
 
   const showAlert = (title: string, message?: string, iconBg = 'bg-orange-600', icon = <AlertTriangle size={28} className="text-white" />) =>
     setModal({ title, message, icon, iconBg, onConfirm: () => setModal(null) });
-
-  const showConfirm = (title: string, message: string, onConfirm: () => void) =>
-    setModal({ title, message, icon: <Trash2 size={28} className="text-white" />, iconBg: 'bg-red-600', confirmText: 'Borrar', confirmClass: 'bg-red-600', onConfirm: () => { setModal(null); onConfirm(); }, onCancel: () => setModal(null) });
 
   const fetchMaterials = async () => {
     setListLoading(true);
@@ -262,6 +262,23 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
         </div>
       )}
       {modal && <AppModal {...modal} />}
+
+      {deleteTarget && (
+        <DeleteArchiveModal
+          clientName={deleteTarget.client}
+          onCancel={() => setDeleteTarget(null)}
+          onConfirm={async (completada, motivo) => {
+            setDeleteTarget(null);
+            await archiveAndDelete('unico_materials', {
+              id: deleteTarget.id,
+              payload: deleteTarget,
+              category: 'MATERIALES',
+              created_at: deleteTarget.server_created_at,
+            }, completada, motivo);
+            fetchMaterials();
+          }}
+        />
+      )}
       {showDatePicker && (
         <DateTimePickerModal
           initialDate={deliveryDate}
@@ -537,10 +554,7 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
                     <Edit3 size={16} />
                   </button>
                   <button
-                    onClick={() => showConfirm("¿Borrar registro?", `Se eliminará "${r.client}" de forma permanente.`, async () => {
-                      await supabase.from('unico_materials').delete().eq('id', r.id);
-                      fetchMaterials();
-                    })}
+                    onClick={() => setDeleteTarget(r)}
                     className="p-2 bg-red-500/10 rounded-lg text-red-500 border border-red-500/20 active:scale-90 transition-all"
                   >
                     <Trash2 size={16} />

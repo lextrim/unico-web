@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, Trash2, MapPin, Search, X, Image as ImageIcon, Edit3, FileText, Clock, CalendarClock, AlertCircle } from 'lucide-react';
 import { supabase } from '../supabase';
 import AppModal from './AppModal';
+import DeleteArchiveModal from './DeleteArchiveModal';
 import DeliveryModal from './DeliveryModal';
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { getBadgeClass } from '../utils/badges';
@@ -93,7 +94,7 @@ const getDeliveryStyle = (dt: string) => {
 };
 
 
-const ListScreen: React.FC<{ orders: any[], onDelete: (id: string) => void, isAdmin: boolean }> = ({ orders, onDelete, isAdmin }) => {
+const ListScreen: React.FC<{ orders: any[], onDelete: (order: any, completada: boolean, motivo: string | null) => void, isAdmin: boolean }> = ({ orders, onDelete, isAdmin }) => {
   const { category } = useParams();
   const nav = useNavigate();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -104,9 +105,7 @@ const ListScreen: React.FC<{ orders: any[], onDelete: (id: string) => void, isAd
   const [moveTarget, setMoveTarget] = useState<any | null>(null);
   const [isMoving, setIsMoving] = useState(false);
   const [modal, setModal] = useState<any>(null);
-
-  const showConfirm = (title: string, message: string, onConfirm: () => void) =>
-    setModal({ title, message, icon: <Trash2 size={28} className="text-white" />, iconBg: 'bg-red-600', confirmText: 'Borrar', confirmClass: 'bg-red-600', onConfirm: () => { setModal(null); onConfirm(); }, onCancel: () => setModal(null) });
+  const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
 
   const handleMoveToEntregas = async (datetime: string | null) => {
     if (!moveTarget) return;
@@ -177,6 +176,17 @@ const ListScreen: React.FC<{ orders: any[], onDelete: (id: string) => void, isAd
     <div className="flex flex-col h-screen bg-slate-950 overflow-hidden relative normal-case">
 
       {modal && <AppModal {...modal} />}
+
+      {deleteTarget && (
+        <DeleteArchiveModal
+          clientName={deleteTarget.client}
+          onCancel={() => setDeleteTarget(null)}
+          onConfirm={(completada, motivo) => {
+            onDelete(deleteTarget, completada, motivo);
+            setDeleteTarget(null);
+          }}
+        />
+      )}
 
       {/* Modal mover a Entregas */}
       {moveTarget && (
@@ -359,7 +369,7 @@ const ListScreen: React.FC<{ orders: any[], onDelete: (id: string) => void, isAd
                         <Edit3 size={16} />
                       </button>
                       <button
-                        onClick={() => showConfirm("¿Borrar registro?", `Se eliminará "${o.client}" de forma permanente.`, () => onDelete(o.id))}
+                        onClick={() => setDeleteTarget(o)}
                         className="p-2 bg-red-500/10 rounded-lg text-red-500 border border-red-500/20 active:scale-90 transition-all"
                       >
                         <Trash2 size={16} />

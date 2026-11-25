@@ -1,9 +1,5 @@
 import { supabase } from '../supabase';
 
-// Terminada/Terminaciones no bloquean el nombre: el cliente puede encargar
-// otra cocina distinta más adelante una vez que la suya ya pasó por el taller.
-const FINAL_STATES = ['TERMINADA', 'TERMINACIONES'];
-
 const CAT_LABEL: Record<string, string> = {
   ARMANDOSE: 'Armándose',
   TERMINADA: 'Terminada',
@@ -15,6 +11,10 @@ const CAT_LABEL: Record<string, string> = {
  * Busca si ya existe otro registro (en Materiales o en Pedidos activos) con ese
  * nombre de cliente. Para usar tanto al crear como al editar: pasa el id del
  * propio registro en `excludeId` para que no se compare consigo mismo.
+ *
+ * No hay excepción por categoría: un nombre solo vuelve a estar libre cuando
+ * el registro se borra de verdad (y se archiva en unico_archivo, ver
+ * utils/archive.ts), no al llegar a Terminada/Terminaciones.
  *
  * Nota: esto es una comprobación "mejor esfuerzo" desde el cliente, no una
  * garantía — dos guardados simultáneos pueden colarse los dos. La solución de
@@ -34,8 +34,7 @@ export async function findDuplicateClientLocation(clientName: string, excludeId?
   const { data: orders } = await supabase.from('unico_orders').select('id, payload, category');
   const dupOrd = (orders || []).find((r: any) =>
     r.id !== excludeId &&
-    r.payload?.client?.toUpperCase().trim() === target &&
-    !FINAL_STATES.includes((r.category || '').toUpperCase())
+    r.payload?.client?.toUpperCase().trim() === target
   );
   if (dupOrd) return CAT_LABEL[(dupOrd.category || '').toUpperCase()] || dupOrd.category;
 
