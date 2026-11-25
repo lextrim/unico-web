@@ -180,6 +180,7 @@ const ListScreen: React.FC<{ orders: any[], onDelete: (order: any, completada: b
       {deleteTarget && (
         <DeleteArchiveModal
           clientName={deleteTarget.client}
+          category={deleteTarget.category}
           onCancel={() => setDeleteTarget(null)}
           onConfirm={(completada, motivo) => {
             onDelete(deleteTarget, completada, motivo);

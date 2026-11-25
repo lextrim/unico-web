@@ -3,10 +3,15 @@ import { Trash2 } from 'lucide-react';
 
 const DeleteArchiveModal: React.FC<{
   clientName: string;
+  category: string;
   onConfirm: (completada: boolean, motivo: string | null) => void;
   onCancel: () => void;
-}> = ({ clientName, onConfirm, onCancel }) => {
-  const [step, setStep] = useState<'ask' | 'motivo'>('ask');
+}> = ({ clientName, category, onConfirm, onCancel }) => {
+  // Solo si ya pasó por Entregas tiene sentido preguntar si está terminada
+  // (puede que no hiciera falta Repasos). Antes de Entregas, se está borrando
+  // a mitad de proceso: se pregunta directamente el motivo.
+  const reachedEntregas = category === 'PROGRAMADA' || category === 'TERMINACIONES';
+  const [step, setStep] = useState<'ask' | 'motivo'>(reachedEntregas ? 'ask' : 'motivo');
   const [motivo, setMotivo] = useState('');
 
   return (
@@ -17,12 +22,14 @@ const DeleteArchiveModal: React.FC<{
             <Trash2 size={28} className="text-white" />
           </div>
           <h3 className="text-white text-lg font-semibold text-center">
-            {step === 'ask' ? `Borrar "${clientName}"` : '¿Qué falló?'}
+            {step === 'ask' ? `Borrar "${clientName}"` : reachedEntregas ? '¿Qué falló?' : `Borrar "${clientName}"`}
           </h3>
           <p className="text-slate-400 text-[13px] font-medium text-center leading-relaxed">
             {step === 'ask'
-              ? '¿Está totalmente terminada? ¿Ha pasado por todas las categorías?'
-              : 'Indica el motivo para dejarlo anotado en el historial.'}
+              ? '¿Está totalmente terminada? Puede que no hiciera falta repaso.'
+              : reachedEntregas
+                ? 'Indica el motivo para dejarlo anotado en el historial.'
+                : 'Todavía no ha llegado a Entregas. Indica el motivo del borrado.'}
           </p>
         </div>
 

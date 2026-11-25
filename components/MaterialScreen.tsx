@@ -266,6 +266,7 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
       {deleteTarget && (
         <DeleteArchiveModal
           clientName={deleteTarget.client}
+          category="MATERIALES"
           onCancel={() => setDeleteTarget(null)}
           onConfirm={async (completada, motivo) => {
             setDeleteTarget(null);
