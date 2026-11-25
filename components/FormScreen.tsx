@@ -39,10 +39,10 @@ function loadFreshDraft(key: string): any | null {
 }
 
 const NEXT_OPTIONS: Record<string, { value: string; label: string }[]> = {
-  ARMANDOSE:    [{ value: 'ARMANDOSE', label: 'Armándose' }, { value: 'TERMINADA', label: 'Terminada' }, { value: 'PROGRAMADA', label: 'Entregas' }, { value: 'TERMINACIONES', label: 'Terminaciones' }],
-  TERMINADA:    [{ value: 'TERMINADA', label: 'Terminada' }, { value: 'PROGRAMADA', label: 'Entregas' }, { value: 'TERMINACIONES', label: 'Terminaciones' }],
-  PROGRAMADA:   [{ value: 'PROGRAMADA', label: 'Entregas' }, { value: 'TERMINACIONES', label: 'Terminaciones' }],
-  TERMINACIONES:[{ value: 'TERMINACIONES', label: 'Terminaciones' }],
+  ARMANDOSE:    [{ value: 'ARMANDOSE', label: 'Armándose' }, { value: 'TERMINADA', label: 'Montada' }, { value: 'PROGRAMADA', label: 'Entregas' }, { value: 'TERMINACIONES', label: 'Repasos' }],
+  TERMINADA:    [{ value: 'TERMINADA', label: 'Montada' }, { value: 'PROGRAMADA', label: 'Entregas' }, { value: 'TERMINACIONES', label: 'Repasos' }],
+  PROGRAMADA:   [{ value: 'PROGRAMADA', label: 'Entregas' }, { value: 'TERMINACIONES', label: 'Repasos' }],
+  TERMINACIONES:[{ value: 'TERMINACIONES', label: 'Repasos' }],
 };
 const STAGE_LABEL: Record<string, string> = Object.fromEntries(
   Object.values(NEXT_OPTIONS).flat().map(o => [o.value, o.label])

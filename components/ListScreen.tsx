@@ -49,7 +49,7 @@ const colors: Record<string, string> = {
 const CATEGORIES_WITH_BADGES = ['MATERIALES'];
 
 const CAT_LABEL: Record<string, string> = {
-  MATERIALES: 'Materiales', ARMANDOSE: 'Armándose', TERMINADA: 'Terminada', PROGRAMADA: 'Entregas', TERMINACIONES: 'Terminaciones',
+  MATERIALES: 'Materiales', ARMANDOSE: 'Armándose', TERMINADA: 'Montada', PROGRAMADA: 'Entregas', TERMINACIONES: 'Repasos',
 };
 
 // Etiqueta de urgencia para mostrar junto a la hora de entrega

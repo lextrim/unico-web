@@ -2,9 +2,9 @@ import { supabase } from '../supabase';
 
 const CAT_LABEL: Record<string, string> = {
   ARMANDOSE: 'Armándose',
-  TERMINADA: 'Terminada',
+  TERMINADA: 'Montada',
   PROGRAMADA: 'Entregas',
-  TERMINACIONES: 'Terminaciones',
+  TERMINACIONES: 'Repasos',
 };
 
 /**

@@ -14,7 +14,7 @@ const STATUS_COLORS: Record<string, string> = {
   TERMINACIONES: 'bg-red-500/20 text-red-400 border-red-500/30',
 };
 
-const STATUS_LABEL: Record<string, string> = { PROGRAMADA: 'ENTREGAS' };
+const STATUS_LABEL: Record<string, string> = { PROGRAMADA: 'ENTREGAS', TERMINADA: 'MONTADA', TERMINACIONES: 'REPASOS' };
 const label = (s: string) => STATUS_LABEL[s] || s;
 
 const PRINT_BADGE: Record<string, string> = {
@@ -335,9 +335,9 @@ const InformesScreen: React.FC<{ isAdmin: boolean; isAPK: boolean }> = ({ isAdmi
               { value: 'TODOS', label: 'Todos los registros' },
               { value: 'MATERIALES', label: 'Material' },
               { value: 'ARMANDOSE', label: 'Armándose' },
-              { value: 'TERMINADA', label: 'Terminada' },
+              { value: 'TERMINADA', label: 'Montada' },
               { value: 'PROGRAMADA', label: 'Entregas' },
-              { value: 'TERMINACIONES', label: 'Terminaciones' },
+              { value: 'TERMINACIONES', label: 'Repasos' },
             ]}
           />
 

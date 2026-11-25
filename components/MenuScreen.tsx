@@ -16,9 +16,9 @@ const MenuScreen: React.FC<{ isAdmin: boolean, isViewer: boolean, isAPK: boolean
   const items = [
     { label: 'Materiales', icon: Package, path: '/material', bg: 'bg-blue-600/15', color: 'text-blue-400' },
     { label: 'Armándose', icon: Hammer, path: '/list/ARMANDOSE', bg: 'bg-orange-600/15', color: 'text-orange-400' },
-    { label: 'Terminada', icon: CheckCircle, path: '/list/TERMINADA', bg: 'bg-emerald-600/15', color: 'text-emerald-400' },
+    { label: 'Montada', icon: CheckCircle, path: '/list/TERMINADA', bg: 'bg-emerald-600/15', color: 'text-emerald-400' },
     { label: 'Entregas', icon: Truck, path: '/list/PROGRAMADA', bg: 'bg-indigo-600/15', color: 'text-indigo-400' },
-    { label: 'Terminaciones', icon: AlertTriangle, path: '/list/TERMINACIONES', bg: 'bg-red-600/15', color: 'text-red-400' },
+    { label: 'Repasos', icon: AlertTriangle, path: '/list/TERMINACIONES', bg: 'bg-red-600/15', color: 'text-red-400' },
     { label: 'Informes', icon: FileText, path: '/informes', bg: 'bg-slate-600/15', color: 'text-slate-400' },
   ];
 

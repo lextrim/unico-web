@@ -52,15 +52,15 @@ const formatDeliveryDate = (dt: string) => {
 
 const CAT_LABEL: Record<string, string> = {
   ARMANDOSE: 'ARMÁNDOSE',
-  TERMINADA: 'TERMINADA',
+  TERMINADA: 'MONTADA',
   PROGRAMADA: 'ENTREGAS',
-  TERMINACIONES: 'TERMINACIONES',
+  TERMINACIONES: 'REPASOS',
 };
 const MOVE_LABEL: Record<string, string> = {
   ARMANDOSE: 'Armándose',
-  TERMINADA: 'Terminada',
+  TERMINADA: 'Montada',
   PROGRAMADA: 'Entregas',
-  TERMINACIONES: 'Terminaciones',
+  TERMINACIONES: 'Repasos',
 };
 const CAT_COLOR: Record<string, string> = {
   ARMANDOSE: 'bg-orange-600',
@@ -399,9 +399,9 @@ const MaterialScreen: React.FC<{ orders?: any[], isAdmin: boolean, onRefresh?: (
               options={[
                 { value: '', label: 'Material' },
                 { value: 'ARMANDOSE', label: 'Armándose' },
-                { value: 'TERMINADA', label: 'Terminada' },
+                { value: 'TERMINADA', label: 'Montada' },
                 { value: 'PROGRAMADA', label: 'Entregas' },
-                { value: 'TERMINACIONES', label: 'Terminaciones' },
+                { value: 'TERMINACIONES', label: 'Repasos' },
               ]}
             />
 
